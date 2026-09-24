@@ -22,10 +22,14 @@ func main() {
 	socket := qpub.NewSocket(qpub.WithAPIKey(key))
 	defer socket.Reset()
 
-	ch := socket.Channels.Get("my-channel")
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
+	if err := socket.Connection.WaitUntilConnected(ctx); err != nil {
+		log.Fatal(err)
+	}
+
+	ch := socket.Channels.Get("my-channel")
 	err := ch.Subscribe(ctx, func(m qpub.Message) {
 		fmt.Println("message:", string(m.Data))
 	}, channel.SubscribeOptions{Timeout: 30 * time.Second})

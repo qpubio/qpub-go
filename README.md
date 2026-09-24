@@ -61,6 +61,7 @@ See [`examples/`](examples/) and the [docs/](docs/) folder:
 - [Architecture & layer rules](docs/architecture.md)
 - [Implementation status (plan phases)](docs/implementation-status.md)
 - [Documentation index](docs/README.md)
+- [Contributing & development](CONTRIBUTING.md)
 
 ## License
 

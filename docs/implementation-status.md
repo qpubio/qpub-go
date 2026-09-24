@@ -6,17 +6,39 @@ Single source of truth for **parity with qpub-js v2.1.0** and the implementation
 
 ---
 
+## Parity estimate (qpub-js v2.1.0 core)
+
+**Last reviewed:** 2026-09-24
+
+Excludes React, UMD, and runtime DI (out of scope). Percentages are approximate; refresh this section when major milestones land.
+
+| Dimension                                                 | Approx. | Notes                                                                                                        |
+| --------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------ |
+| Public API surface (Socket, Rest, auth, channels, queues) | ~88%    | Main methods present; thinner exported interfaces than reference SDK                                         |
+| Runtime behavior (reconnect, socket edge cases)           | ~70%    | REST/queues strong; connection/socket stress paths not fully proven                                          |
+| Automated test parity                                     | ~40%    | Unit/httptest coverage; no full WebSocket integration suite yet                                              |
+| DevEx / shipping                                          | ~65%    | CI, lint, examples, [CONTRIBUTING.md](../CONTRIBUTING.md); release workflow and live verification still open |
+
+**Practical summary**
+
+- **~75–80%** — usable for Go backends (REST, queues, typical socket pub/sub).
+- **~65–70%** — behavioral equivalence under reconnect, auth edge cases, and stress scenarios.
+
+Contributor guide: [CONTRIBUTING.md](../CONTRIBUTING.md).
+
+---
+
 ## Phase 0 — Foundation and contract tests
 
-| Item                                         | State | Notes                                                                 |
-| -------------------------------------------- | ----- | --------------------------------------------------------------------- |
-| Module `github.com/qpubio/qpub-go`, Go 1.22+ | Done  | [go.mod](../go.mod)                                                   |
-| Apache-2.0                                   | Done  | [LICENSE](../LICENSE)                                                 |
-| `protocol/` actions and messages             | Done  | [protocol/](../protocol/)                                             |
-| ApiKey parse                                 | Done  | [internal/apikey](../internal/apikey/)                                |
-| JWT HS256 sign/decode/expiry                 | Done  | [internal/jwt](../internal/jwt/)                                      |
-| HMAC + canonical token request string        | Done  | [auth/manager.go](../auth/manager.go) `BuildCanonicalString`          |
-| Auth unit tests (subset of qpub-js)          | Done  | [auth/manager_test.go](../auth/manager_test.go)                       |
+| Item                                         | State | Notes                                                                                                                                |
+| -------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Module `github.com/qpubio/qpub-go`, Go 1.22+ | Done  | [go.mod](../go.mod)                                                                                                                  |
+| Apache-2.0                                   | Done  | [LICENSE](../LICENSE)                                                                                                                |
+| `protocol/` actions and messages             | Done  | [protocol/](../protocol/)                                                                                                            |
+| ApiKey parse                                 | Done  | [internal/apikey](../internal/apikey/)                                                                                               |
+| JWT HS256 sign/decode/expiry                 | Done  | [internal/jwt](../internal/jwt/)                                                                                                     |
+| HMAC + canonical token request string        | Done  | [auth/manager.go](../auth/manager.go) `BuildCanonicalString`                                                                         |
+| Auth unit tests (subset of qpub-js)          | Done  | [auth/manager_test.go](../auth/manager_test.go)                                                                                      |
 | Golden vectors shared with qpub-js           | Done  | [auth/testdata/canonical_vectors.json](../auth/testdata/canonical_vectors.json), [auth/canonical_test.go](../auth/canonical_test.go) |
 
 ---
@@ -46,54 +68,54 @@ Single source of truth for **parity with qpub-js v2.1.0** and the implementation
 
 ## Phase 3 — REST queues
 
-| Item                                          | State | Notes                                                          |
-| --------------------------------------------- | ----- | -------------------------------------------------------------- |
-| Enqueue, GetJob, ListJobs, Cancel, Retry      | Done  | [queue/manager.go](../queue/manager.go)                        |
-| GetConfig, UpdateConfig                       | Done  |                                                                |
-| RegisterWorker, Heartbeat, Pull, Ack, Nack    | Done  |                                                                |
-| RunWorker / StopWorker (context + loop)       | Done  |                                                                |
+| Item                                          | State | Notes                                                              |
+| --------------------------------------------- | ----- | ------------------------------------------------------------------ |
+| Enqueue, GetJob, ListJobs, Cancel, Retry      | Done  | [queue/manager.go](../queue/manager.go)                            |
+| GetConfig, UpdateConfig                       | Done  |                                                                    |
+| RegisterWorker, Heartbeat, Pull, Ack, Nack    | Done  |                                                                    |
+| RunWorker / StopWorker (context + loop)       | Done  |                                                                    |
 | Worker integration test (pull → ack sequence) | Done  | [queue/manager_test.go](../queue/manager_test.go) `TestPullAndAck` |
 
 ---
 
 ## Phase 4 — WebSocket transport and connection
 
-| Item                              | State   | Notes                                                                 |
-| --------------------------------- | ------- | --------------------------------------------------------------------- |
-| WebSocket client wrapper          | Done    | [transport/ws/client.go](../transport/ws/client.go)                   |
-| Connect with auth URL             | Done    | [connection/connection.go](../connection/connection.go)               |
-| Connection lifecycle events       | Done    |                                                                       |
-| Auto-connect                      | Done    | [qpub/socket.go](../qpub/socket.go)                                   |
-| Auto-reconnect + backoff          | Partial | Basic reconnect; edge cases vs full qpub-js not exhaustively tested     |
-| Auto-authenticate on connect      | Done    |                                                                       |
-| Ping/pong RTT (`id` correlation)  | Done    | [connection/ping_test.go](../connection/ping_test.go)                 |
-| Resubscribe after reconnect       | Done    | Calls channel manager                                                 |
-| Connection unit/integration tests | Partial | Ping RTT unit test; full WS integration tests still Todo              |
+| Item                              | State   | Notes                                                               |
+| --------------------------------- | ------- | ------------------------------------------------------------------- |
+| WebSocket client wrapper          | Done    | [transport/ws/client.go](../transport/ws/client.go)                 |
+| Connect with auth URL             | Done    | [connection/connection.go](../connection/connection.go)             |
+| Connection lifecycle events       | Done    |                                                                     |
+| Auto-connect                      | Done    | [qpub/socket.go](../qpub/socket.go)                                 |
+| Auto-reconnect + backoff          | Partial | Basic reconnect; edge cases vs full qpub-js not exhaustively tested |
+| Auto-authenticate on connect      | Done    |                                                                     |
+| Ping/pong RTT (`id` correlation)  | Done    | [connection/ping_test.go](../connection/ping_test.go)               |
+| Resubscribe after reconnect       | Done    | Calls channel manager                                               |
+| Connection unit/integration tests | Partial | Ping RTT unit test; full WS integration tests still Todo            |
 
 ---
 
 ## Phase 5 — Socket channels
 
-| Item                                     | State   | Notes                                                                 |
-| ---------------------------------------- | ------- | --------------------------------------------------------------------- |
-| Subscribe / unsubscribe / publish wire   | Done    | [channel/socket.go](../channel/socket.go)                             |
-| MESSAGE dispatch to handler              | Done    |                                                                       |
-| Pause / resume / buffer                  | Done    | [channel/socket_test.go](../channel/socket_test.go)                   |
-| Manager ref-count + Release              | Done    | `SocketManager`                                                       |
-| Pending subscribe + resubscribe all      | Done    |                                                                       |
-| Operation queue during pending sub/unsub | Done    | Queued ops when pending subscribe/unsubscribe                         |
-| SUBSCRIBED / UNSUBSCRIBED handling       | Done    | `HandleIncoming`; subscribe/unsubscribe wait for ack                  |
-| Subscribe by `event` filter              | Done    | `SubscribeOptions.Event`                                              |
-| Channel unit tests                       | Done    | [channel/socket_test.go](../channel/socket_test.go)                   |
+| Item                                     | State | Notes                                                |
+| ---------------------------------------- | ----- | ---------------------------------------------------- |
+| Subscribe / unsubscribe / publish wire   | Done  | [channel/socket.go](../channel/socket.go)            |
+| MESSAGE dispatch to handler              | Done  |                                                      |
+| Pause / resume / buffer                  | Done  | [channel/socket_test.go](../channel/socket_test.go)  |
+| Manager ref-count + Release              | Done  | `SocketManager`                                      |
+| Pending subscribe + resubscribe all      | Done  |                                                      |
+| Operation queue during pending sub/unsub | Done  | Queued ops when pending subscribe/unsubscribe        |
+| SUBSCRIBED / UNSUBSCRIBED handling       | Done  | `HandleIncoming`; subscribe/unsubscribe wait for ack |
+| Subscribe by `event` filter              | Done  | `SubscribeOptions.Event`                             |
+| Channel unit tests                       | Done  | [channel/socket_test.go](../channel/socket_test.go)  |
 
 ---
 
 ## Phase 6 — Socket facade and reset
 
-| Item                                                 | State | Notes                                    |
-| ---------------------------------------------------- | ----- | ---------------------------------------- |
-| `NewSocket`, GetInstanceID                           | Done  | [qpub/socket.go](../qpub/socket.go)      |
-| Reset order (connection → channels → auth → options) | Done  |                                          |
+| Item                                                 | State | Notes                                                              |
+| ---------------------------------------------------- | ----- | ------------------------------------------------------------------ |
+| `NewSocket`, GetInstanceID                           | Done  | [qpub/socket.go](../qpub/socket.go)                                |
+| Reset order (connection → channels → auth → options) | Done  |                                                                    |
 | Thread-safety documentation                          | Done  | [architecture.md](./architecture.md) + serial handlers per channel |
 
 ---
@@ -123,6 +145,7 @@ Single source of truth for **parity with qpub-js v2.1.0** and the implementation
 | Example: queue worker                                   | Done  | [examples/queue-worker](../examples/queue-worker/)      |
 | CI: `go test -race ./...`                               | Done  | [.github/workflows/ci.yml](../.github/workflows/ci.yml) |
 | CI: golangci-lint                                       | Done  | [.golangci.yml](../.golangci.yml)                       |
+| Contributor develop/test/debug guide                    | Done  | [CONTRIBUTING.md](../CONTRIBUTING.md)                   |
 | Release workflow / semver tags                          | Todo  |                                                         |
 | qpub.io / shared docs quickstart (Go)                   | Todo  | After live SDK verification                             |
 
@@ -130,12 +153,12 @@ Single source of truth for **parity with qpub-js v2.1.0** and the implementation
 
 ## Architecture alignment (ongoing)
 
-| Item                                              | State   | Notes                                                                 |
-| ------------------------------------------------- | ------- | --------------------------------------------------------------------- |
-| Layer import rules documented                     | Done    | [architecture.md](./architecture.md)                                  |
+| Item                                              | State   | Notes                                                                                          |
+| ------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------- |
+| Layer import rules documented                     | Done    | [architecture.md](./architecture.md)                                                           |
 | Application packages use HTTP port interface only | Partial | [internal/port/http.go](../internal/port/http.go) added; wire queue/channel/auth incrementally |
-| Optional `internal/bootstrap` extraction          | Todo    | When wiring grows                                                     |
-| `MessageSender` port for WebSocket send           | Done    | [channel/ws_sender.go](../channel/ws_sender.go)                       |
+| Optional `internal/bootstrap` extraction          | Todo    | When wiring grows                                                                              |
+| `MessageSender` port for WebSocket send           | Done    | [channel/ws_sender.go](../channel/ws_sender.go)                                                |
 
 ---
 

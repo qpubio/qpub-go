@@ -49,6 +49,7 @@ type SocketChannel struct {
 	handlerSerial      sync.Mutex
 	subDone            chan struct{}
 	unsubDone          chan struct{}
+	reconnectPending   bool
 }
 
 func NewSocketChannel(name string, ws MessageSender, log *logger.Logger) *SocketChannel {
@@ -72,10 +73,18 @@ func (c *SocketChannel) HasCallback() bool {
 func (c *SocketChannel) SetPendingSubscribe(v bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.reconnectPending = v
 	c.pendingSubscribe = v
 	if v {
 		c.subscribed = false
 	}
+}
+
+// NeedsResubscribe is true after disconnect when auto-resubscribe should run.
+func (c *SocketChannel) NeedsResubscribe() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.reconnectPending && c.handler != nil
 }
 
 func (c *SocketChannel) Subscribe(ctx context.Context, handler MessageHandler, opts SubscribeOptions) error {
@@ -259,6 +268,7 @@ func (c *SocketChannel) HandleIncoming(raw []byte) {
 		c.mu.Lock()
 		c.subscribed = true
 		c.pendingSubscribe = false
+		c.reconnectPending = false
 		done := c.subDone
 		c.subDone = nil
 		c.mu.Unlock()
@@ -479,6 +489,15 @@ func (m *SocketManager) PendingSubscribeAllChannels() {
 func (m *SocketManager) ResubscribeAllChannels(ctx context.Context) {
 	for _, ch := range m.channels {
 		if ch.HasCallback() {
+			_ = ch.Resubscribe(ctx)
+		}
+	}
+}
+
+// ResubscribeAfterReconnect resubscribes only channels marked pending after disconnect.
+func (m *SocketManager) ResubscribeAfterReconnect(ctx context.Context) {
+	for _, ch := range m.channels {
+		if ch.NeedsResubscribe() {
 			_ = ch.Resubscribe(ctx)
 		}
 	}

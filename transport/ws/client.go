@@ -9,10 +9,11 @@ import (
 
 // Client wraps gorilla WebSocket.
 type Client struct {
-	log    *logger.Logger
-	mu     sync.Mutex
-	conn   *websocket.Conn
-	dialer websocket.Dialer
+	log     *logger.Logger
+	mu      sync.Mutex
+	writeMu sync.Mutex // serializes WriteMessage (gorilla allows one writer)
+	conn    *websocket.Conn
+	dialer  websocket.Dialer
 }
 
 func New(log *logger.Logger) *Client {
@@ -47,6 +48,8 @@ func (c *Client) IsConnected() bool {
 }
 
 func (c *Client) Send(data []byte) error {
+	c.writeMu.Lock()
+	defer c.writeMu.Unlock()
 	c.mu.Lock()
 	conn := c.conn
 	c.mu.Unlock()

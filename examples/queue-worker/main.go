@@ -27,7 +27,9 @@ func main() {
 
 	err := rest.Queues.RunWorker(ctx, queueName, func(ctx context.Context, job protocol.QueueJob) (interface{}, error) {
 		fmt.Println("processing job", job.ID, string(job.Payload))
-		return map[string]string{"status": "ok"}, nil
+		result := map[string]string{"status": "ok"}
+		fmt.Println("done job", job.ID, result)
+		return result, nil
 	}, protocol.RunWorkerOptions{})
 	if err != nil && ctx.Err() == nil {
 		log.Fatal(err)

@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/qpubio/qpub-go/auth"
 	"github.com/qpubio/qpub-go/channel"
 	"github.com/qpubio/qpub-go/events"
@@ -104,7 +103,7 @@ func (c *Conn) Connect(ctx context.Context) error {
 	c.startReadLoop(ctx)
 
 	if o.AutoResubscribe {
-		c.chMgr.ResubscribeAllChannels(ctx)
+		c.chMgr.ResubscribeAfterReconnect(ctx)
 	}
 	return nil
 }
@@ -138,18 +137,20 @@ func (c *Conn) startReadLoop(ctx context.Context) {
 }
 
 func (c *Conn) handleMessage(data []byte) {
-	var wire struct {
-		Action          protocol.ActionType `json:"action"`
-		ConnectionID    string              `json:"connection_id"`
-		ConnectionDetails *protocol.ConnectionDetails `json:"connection_details"`
-		ID              int                 `json:"id"`
+	var peek struct {
+		Action protocol.ActionType `json:"action"`
 	}
-	if err := json.Unmarshal(data, &wire); err != nil {
+	if err := json.Unmarshal(data, &peek); err != nil {
 		c.events.Emit(events.ConnectionFailed, events.ConnectionFailedPayload{Error: err})
 		return
 	}
-	switch wire.Action {
+	switch peek.Action {
 	case protocol.ActionConnected:
+		var wire struct {
+			ConnectionID      string                      `json:"connection_id"`
+			ConnectionDetails *protocol.ConnectionDetails `json:"connection_details"`
+		}
+		_ = json.Unmarshal(data, &wire)
 		c.events.Emit(events.ConnectionConnected, map[string]interface{}{
 			"connectionId":      wire.ConnectionID,
 			"connectionDetails": wire.ConnectionDetails,
@@ -157,6 +158,10 @@ func (c *Conn) handleMessage(data []byte) {
 	case protocol.ActionDisconnected:
 		c.events.Emit(events.ConnectionDisconnected, nil)
 	case protocol.ActionPong:
+		var wire struct {
+			ID int `json:"id"`
+		}
+		_ = json.Unmarshal(data, &wire)
 		c.completePing(wire.ID)
 	default:
 		c.chMgr.Dispatch(data)
@@ -222,9 +227,22 @@ func (c *Conn) IsConnected() bool {
 	return c.ws.IsConnected()
 }
 
+// WaitUntilConnected blocks until the WebSocket dial completes or ctx is cancelled.
+func (c *Conn) WaitUntilConnected(ctx context.Context) error {
+	for {
+		if c.ws.IsConnected() {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(50 * time.Millisecond):
+		}
+	}
+}
+
 func (c *Conn) Ping(ctx context.Context) (time.Duration, error) {
-	conn := c.ws.Conn()
-	if conn == nil {
+	if !c.ws.IsConnected() {
 		return 0, fmt.Errorf("WebSocket is not connected")
 	}
 	c.mu.Lock()
@@ -237,7 +255,7 @@ func (c *Conn) Ping(ctx context.Context) (time.Duration, error) {
 	c.mu.Unlock()
 
 	msg, _ := json.Marshal(map[string]interface{}{"action": protocol.ActionPing, "id": id})
-	if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+	if err := c.ws.Send(msg); err != nil {
 		return 0, err
 	}
 	timeout := time.Duration(c.opts.Get().PingTimeoutMs) * time.Millisecond
