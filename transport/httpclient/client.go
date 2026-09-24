@@ -8,7 +8,11 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/qpubio/qpub-go/internal/port"
 )
+
+var _ port.HTTPClient = (*Client)(nil)
 
 // Client is the HTTP transport used by REST and auth.
 type Client struct {

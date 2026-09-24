@@ -7,3 +7,5 @@
 | [cross-sdk-api.md](./cross-sdk-api.md)                 | JavaScript vs Go public API comparison                                        |
 
 When adding or moving code, read **architecture.md** first. When prioritizing parity work, use **implementation-status.md** as the single checklist (do not duplicate phase tracking elsewhere).
+
+Examples: [basic REST](../examples/basic/), [socket](../examples/socket/), [token auth](../examples/token-auth/), [queue worker](../examples/queue-worker/).
