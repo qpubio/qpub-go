@@ -25,6 +25,8 @@ func (m *mockSender) Send(data []byte) error {
 	return nil
 }
 
+func (m *mockSender) IsConnected() bool { return true }
+
 func (m *mockSender) last() map[string]interface{} {
 	m.mu.Lock()
 	defer m.mu.Unlock()

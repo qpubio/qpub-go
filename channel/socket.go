@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
@@ -20,13 +21,21 @@ type SubscribeOptions struct {
 	Timeout time.Duration
 }
 
+// UnsubscribeOptions for socket unsubscribe (event-specific or full channel).
+type UnsubscribeOptions struct {
+	Event   string
+	Handler MessageHandler
+	Timeout time.Duration
+}
+
 // MessageHandler receives channel messages (invoked serially per channel).
 type MessageHandler func(protocol.Message)
 
 type queuedOperation struct {
 	kind    string // subscribe | unsubscribe
 	handler MessageHandler
-	opts    SubscribeOptions
+	subOpts SubscribeOptions
+	unsub   UnsubscribeOptions
 }
 
 // SocketChannel is a real-time pub/sub channel.
@@ -43,8 +52,8 @@ type SocketChannel struct {
 	paused             bool
 	bufferWhilePaused  bool
 	pausedMessages     []protocol.Message
-	handler            MessageHandler
-	filterEvent        string
+	catchAllHandler    MessageHandler
+	eventCallbacks     map[string][]MessageHandler
 	operationQueue     []queuedOperation
 	handlerSerial      sync.Mutex
 	subDone            chan struct{}
@@ -58,16 +67,22 @@ func NewSocketChannel(name string, ws MessageSender, log *logger.Logger) *Socket
 		ws:                ws,
 		log:               log,
 		events:            emitter.New[any](),
+		eventCallbacks:    make(map[string][]MessageHandler),
 		bufferWhilePaused: true,
 	}
 }
 
 func (c *SocketChannel) Name() string { return c.name }
 
+// On registers a channel lifecycle listener (qpub-js channel.on).
+func (c *SocketChannel) On(event string, fn func(any)) {
+	c.events.On(event, fn)
+}
+
 func (c *SocketChannel) HasCallback() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.handler != nil
+	return c.catchAllHandler != nil || len(c.eventCallbacks) > 0
 }
 
 func (c *SocketChannel) SetPendingSubscribe(v bool) {
@@ -80,43 +95,72 @@ func (c *SocketChannel) SetPendingSubscribe(v bool) {
 	}
 }
 
-// NeedsResubscribe is true after disconnect when auto-resubscribe should run.
 func (c *SocketChannel) NeedsResubscribe() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.reconnectPending && c.handler != nil
+	return c.reconnectPending && c.hasCallbackLocked()
+}
+
+func (c *SocketChannel) hasCallbackLocked() bool {
+	return c.catchAllHandler != nil || len(c.eventCallbacks) > 0
 }
 
 func (c *SocketChannel) Subscribe(ctx context.Context, handler MessageHandler, opts SubscribeOptions) error {
+	if !c.ws.IsConnected() {
+		return errors.New("Cannot subscribe: WebSocket is not connected")
+	}
+
 	c.mu.Lock()
+	if opts.Event != "" {
+		if c.pendingUnsubscribe {
+			c.operationQueue = append(c.operationQueue, queuedOperation{
+				kind: "subscribe", handler: handler, subOpts: opts,
+			})
+			c.mu.Unlock()
+			return nil
+		}
+		if c.subscribed || c.pendingSubscribe {
+			c.mu.Unlock()
+			c.addEventHandler(opts.Event, handler)
+			return nil
+		}
+		c.mu.Unlock()
+		return c.subscribeNetwork(ctx, handler, opts, true)
+	}
+
 	if c.pendingSubscribe || c.pendingUnsubscribe {
-		c.operationQueue = append(c.operationQueue, queuedOperation{kind: "subscribe", handler: handler, opts: opts})
+		c.operationQueue = append(c.operationQueue, queuedOperation{
+			kind: "subscribe", handler: handler, subOpts: opts,
+		})
+		c.mu.Unlock()
+		return nil
+	}
+	if c.subscribed && !c.pendingSubscribe {
+		c.mu.Lock()
+		c.catchAllHandler = handler
+		c.eventCallbacks = make(map[string][]MessageHandler)
 		c.mu.Unlock()
 		return nil
 	}
 	c.mu.Unlock()
-	return c.executeSubscribe(ctx, handler, opts)
+	return c.subscribeNetwork(ctx, handler, opts, false)
 }
 
-func (c *SocketChannel) executeSubscribe(ctx context.Context, handler MessageHandler, opts SubscribeOptions) error {
+func (c *SocketChannel) subscribeNetwork(ctx context.Context, handler MessageHandler, opts SubscribeOptions, eventMode bool) error {
 	done := make(chan struct{}, 1)
 	c.mu.Lock()
-	c.handler = handler
-	c.filterEvent = opts.Event
+	if eventMode {
+		c.addEventHandlerLocked(opts.Event, handler)
+	} else {
+		c.catchAllHandler = handler
+		c.eventCallbacks = make(map[string][]MessageHandler)
+	}
 	c.pendingSubscribe = true
 	c.subDone = done
-	c.events.Emit(events.ChannelSubscribing, nil)
 	c.mu.Unlock()
+	c.events.Emit(events.ChannelSubscribing, nil)
 
-	msg := map[string]interface{}{
-		"action":  protocol.ActionSubscribe,
-		"channel": c.name,
-	}
-	b, err := json.Marshal(msg)
-	if err != nil {
-		return err
-	}
-	if err := c.ws.Send(b); err != nil {
+	if err := c.sendSubscribeWire(); err != nil {
 		c.mu.Lock()
 		c.pendingSubscribe = false
 		c.mu.Unlock()
@@ -125,25 +169,112 @@ func (c *SocketChannel) executeSubscribe(ctx context.Context, handler MessageHan
 	return waitAck(ctx, done, opts.Timeout, "subscribe")
 }
 
-func (c *SocketChannel) Unsubscribe(ctx context.Context) error {
-	opts := SubscribeOptions{Timeout: 10 * time.Second}
+func (c *SocketChannel) addEventHandler(event string, handler MessageHandler) {
 	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.addEventHandlerLocked(event, handler)
+}
+
+func (c *SocketChannel) addEventHandlerLocked(event string, handler MessageHandler) {
+	list := c.eventCallbacks[event]
+	for _, h := range list {
+		if handlerIdentity(h) == handlerIdentity(handler) {
+			return
+		}
+	}
+	c.eventCallbacks[event] = append(list, handler)
+}
+
+func (c *SocketChannel) sendSubscribeWire() error {
+	msg := map[string]interface{}{
+		"action":  protocol.ActionSubscribe,
+		"channel": c.name,
+	}
+	b, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return c.ws.Send(b)
+}
+
+func (c *SocketChannel) Unsubscribe(ctx context.Context, opts ...UnsubscribeOptions) error {
+	var o UnsubscribeOptions
+	if len(opts) > 0 {
+		o = opts[0]
+	}
+	if o.Timeout <= 0 {
+		o.Timeout = 10 * time.Second
+	}
+
+	c.mu.Lock()
+	if o.Event != "" {
+		if c.subscribed && !c.pendingUnsubscribe {
+			needsNetwork := c.removeEventHandlerLocked(o.Event, o.Handler)
+			if !needsNetwork {
+				c.mu.Unlock()
+				return nil
+			}
+		} else if c.pendingSubscribe || c.pendingUnsubscribe {
+			c.operationQueue = append(c.operationQueue, queuedOperation{
+				kind: "unsubscribe", handler: o.Handler, unsub: o,
+			})
+			c.mu.Unlock()
+			return nil
+		}
+		c.mu.Unlock()
+		return c.unsubscribeNetwork(ctx, o)
+	}
+
+	if !c.subscribed && !c.pendingSubscribe {
+		c.mu.Unlock()
+		return nil
+	}
 	if c.pendingSubscribe || c.pendingUnsubscribe {
-		c.operationQueue = append(c.operationQueue, queuedOperation{kind: "unsubscribe", opts: opts})
+		c.operationQueue = append(c.operationQueue, queuedOperation{
+			kind: "unsubscribe", unsub: o,
+		})
 		c.mu.Unlock()
 		return nil
 	}
 	c.mu.Unlock()
-	return c.executeUnsubscribe(ctx, opts)
+	return c.unsubscribeNetwork(ctx, o)
 }
 
-func (c *SocketChannel) executeUnsubscribe(ctx context.Context, opts SubscribeOptions) error {
+func (c *SocketChannel) removeEventHandlerLocked(event string, handler MessageHandler) (needsNetwork bool) {
+	list, ok := c.eventCallbacks[event]
+	if !ok {
+		return false
+	}
+	if handler != nil {
+		id := handlerIdentity(handler)
+		filtered := list[:0]
+		for _, h := range list {
+			if handlerIdentity(h) != id {
+				filtered = append(filtered, h)
+			}
+		}
+		list = filtered
+		if len(list) == 0 {
+			delete(c.eventCallbacks, event)
+		} else {
+			c.eventCallbacks[event] = list
+		}
+	} else {
+		delete(c.eventCallbacks, event)
+	}
+	if len(c.eventCallbacks) == 0 && c.catchAllHandler == nil && c.subscribed {
+		return true
+	}
+	return false
+}
+
+func (c *SocketChannel) unsubscribeNetwork(ctx context.Context, opts UnsubscribeOptions) error {
 	done := make(chan struct{}, 1)
 	c.mu.Lock()
 	c.pendingUnsubscribe = true
 	c.unsubDone = done
-	c.events.Emit(events.ChannelUnsubscribing, nil)
 	c.mu.Unlock()
+	c.events.Emit(events.ChannelUnsubscribing, nil)
 
 	msg := map[string]interface{}{
 		"action":  protocol.ActionUnsubscribe,
@@ -178,20 +309,43 @@ func waitAck(ctx context.Context, done <-chan struct{}, timeout time.Duration, o
 
 func (c *SocketChannel) Resubscribe(ctx context.Context) error {
 	c.mu.Lock()
-	h := c.handler
-	fe := c.filterEvent
+	catchAll := c.catchAllHandler
+	eventsCopy := make(map[string][]MessageHandler, len(c.eventCallbacks))
+	for ev, hs := range c.eventCallbacks {
+		eventsCopy[ev] = append([]MessageHandler(nil), hs...)
+	}
 	c.subscribed = false
 	c.pendingSubscribe = false
 	c.pendingUnsubscribe = false
 	c.mu.Unlock()
-	if h == nil {
+
+	if catchAll == nil && len(eventsCopy) == 0 {
 		return nil
 	}
-	return c.executeSubscribe(ctx, h, SubscribeOptions{Event: fe})
+
+	done := make(chan struct{}, 1)
+	c.mu.Lock()
+	c.catchAllHandler = catchAll
+	c.eventCallbacks = eventsCopy
+	c.pendingSubscribe = true
+	c.subDone = done
+	c.mu.Unlock()
+	c.events.Emit(events.ChannelSubscribing, nil)
+
+	if err := c.sendSubscribeWire(); err != nil {
+		c.mu.Lock()
+		c.pendingSubscribe = false
+		c.mu.Unlock()
+		return err
+	}
+	return waitAck(ctx, done, 10*time.Second, "subscribe")
 }
 
 func (c *SocketChannel) Publish(ctx context.Context, data interface{}, opts PublishOptions) error {
 	_ = ctx
+	if !c.ws.IsConnected() {
+		return errors.New("Cannot publish: WebSocket is not connected")
+	}
 	payload, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -225,11 +379,10 @@ func (c *SocketChannel) Resume() {
 	msgs := append([]protocol.Message(nil), c.pausedMessages...)
 	c.pausedMessages = nil
 	c.paused = false
-	h := c.handler
 	c.mu.Unlock()
 	c.events.Emit(events.ChannelResumed, nil)
 	for _, m := range msgs {
-		c.invokeHandler(h, m)
+		c.deliverMessage(m)
 	}
 }
 
@@ -245,7 +398,6 @@ func (c *SocketChannel) ClearBufferedMessages() {
 	c.pausedMessages = nil
 }
 
-// HandleIncoming processes a WebSocket frame for this channel.
 func (c *SocketChannel) HandleIncoming(raw []byte) {
 	var wire struct {
 		Action         protocol.ActionType           `json:"action"`
@@ -283,8 +435,8 @@ func (c *SocketChannel) HandleIncoming(raw []byte) {
 		c.mu.Lock()
 		c.subscribed = false
 		c.pendingUnsubscribe = false
-		c.handler = nil
-		c.filterEvent = ""
+		c.catchAllHandler = nil
+		c.eventCallbacks = make(map[string][]MessageHandler)
 		done := c.unsubDone
 		c.unsubDone = nil
 		c.mu.Unlock()
@@ -316,7 +468,7 @@ func (c *SocketChannel) HandleIncoming(raw []byte) {
 				Event:     p.Event,
 				Data:      p.Data,
 			}
-			c.dispatch(m)
+			c.deliverMessage(m)
 		}
 
 	case protocol.ActionError:
@@ -353,14 +505,15 @@ func (c *SocketChannel) processOperationQueue() {
 	c.mu.Unlock()
 
 	ctx := context.Background()
-	if op.kind == "subscribe" {
-		_ = c.executeSubscribe(ctx, op.handler, op.opts)
-	} else {
-		_ = c.executeUnsubscribe(ctx, op.opts)
+	switch op.kind {
+	case "subscribe":
+		_ = c.Subscribe(ctx, op.handler, op.subOpts)
+	case "unsubscribe":
+		_ = c.Unsubscribe(ctx, op.unsub)
 	}
 }
 
-func (c *SocketChannel) dispatch(m protocol.Message) {
+func (c *SocketChannel) deliverMessage(m protocol.Message) {
 	c.mu.Lock()
 	if c.paused && c.bufferWhilePaused {
 		c.pausedMessages = append(c.pausedMessages, m)
@@ -371,13 +524,22 @@ func (c *SocketChannel) dispatch(m protocol.Message) {
 		c.mu.Unlock()
 		return
 	}
-	filter := c.filterEvent
-	h := c.handler
+	var eventHandlers []MessageHandler
+	if m.Event != "" {
+		eventHandlers = append([]MessageHandler(nil), c.eventCallbacks[m.Event]...)
+	}
+	catchAll := c.catchAllHandler
 	c.mu.Unlock()
-	if filter != "" && m.Event != filter {
+
+	if len(eventHandlers) > 0 {
+		for _, h := range eventHandlers {
+			c.invokeHandler(h, m)
+		}
 		return
 	}
-	c.invokeHandler(h, m)
+	if catchAll != nil {
+		c.invokeHandler(catchAll, m)
+	}
 }
 
 func (c *SocketChannel) invokeHandler(h MessageHandler, m protocol.Message) {
@@ -392,7 +554,8 @@ func (c *SocketChannel) invokeHandler(h MessageHandler, m protocol.Message) {
 func (c *SocketChannel) Reset() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.handler = nil
+	c.catchAllHandler = nil
+	c.eventCallbacks = make(map[string][]MessageHandler)
 	c.subscribed = false
 	c.pendingSubscribe = false
 	c.pendingUnsubscribe = false
@@ -400,6 +563,13 @@ func (c *SocketChannel) Reset() {
 	c.pausedMessages = nil
 	c.operationQueue = nil
 	c.events.RemoveAll()
+}
+
+func handlerIdentity(h MessageHandler) uintptr {
+	if h == nil {
+		return 0
+	}
+	return reflect.ValueOf(h).Pointer()
 }
 
 func itoa(i int) string {
@@ -494,7 +664,6 @@ func (m *SocketManager) ResubscribeAllChannels(ctx context.Context) {
 	}
 }
 
-// ResubscribeAfterReconnect resubscribes only channels marked pending after disconnect.
 func (m *SocketManager) ResubscribeAfterReconnect(ctx context.Context) {
 	for _, ch := range m.channels {
 		if ch.NeedsResubscribe() {

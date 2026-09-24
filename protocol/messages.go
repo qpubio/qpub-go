@@ -7,7 +7,7 @@ type ErrorInfo struct {
 	Code       int    `json:"code"`
 	Href       string `json:"href"`
 	Message    string `json:"message"`
-	StatusCode int    `json:"statusCode"`
+	StatusCode int `json:"status_code"`
 }
 
 // ConnectionDetails from CONNECTED message.

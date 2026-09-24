@@ -43,6 +43,7 @@ type ConnectionConnectingPayload struct {
 type ConnectionFailedPayload struct {
 	Error   error
 	Attempt int
+	Context string
 }
 
 // ChannelFailedPayload for channel failures.

@@ -16,12 +16,15 @@ Wire protocol and REST paths are identical across SDKs. Client ergonomics follow
 | `socket.auth` | `socket.Auth` |
 | `socket.connection` | `socket.Connection` |
 | `socket.channels.get(name)` | `socket.Channels.Get(name)` |
+| `channel.on("subscribed", fn)` | `ch.On(qpub.ChannelEvents.Subscribed, fn)` |
+| `channel.subscribe(fn, { event })` | `ch.Subscribe(ctx, fn, channel.SubscribeOptions{Event: "..."})` |
 | `rest.queues.enqueue(...)` | `rest.Queues.Enqueue(ctx, ...)` |
 
 ## Go adaptations
 
 - **Async**: use `context.Context` and `(T, error)` instead of Promises.
-- **Events**: `On(event, fn)` on connection/auth instead of `EventEmitter.on`.
+- **Events**: `On(event, fn)` on connection, auth, and socket channels instead of `EventEmitter.on`.
+- **Connect**: `Connection.WaitUntilConnected(ctx)` before subscribe when not using callbacks on `connected`.
 - **Options**: functional helpers (`WithAPIKey`, `WithAutoConnect`) or `option.FromOption` after `DefaultOption()`.
 - **React**: `@qpub/sdk/react` has no Go equivalent.
 

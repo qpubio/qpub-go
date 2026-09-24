@@ -133,6 +133,25 @@ When running examples against QPub Cloud:
 - Pass secrets only through the environment or a local untracked `.env` (not committed).
 - Use debug log level temporarily; redact tokens in issue reports.
 
+## Testing consumer code
+
+Import `github.com/qpubio/qpub-go/testing` for helpers:
+
+- `NewTestRest` — REST client with `MockHTTP` for auth/token POST recording.
+- `NewTestSocket` — Socket with auto-connect disabled.
+- `NewMockWS` — records WebSocket `Send` calls; set `Connected` false to test subscribe guards.
+
+Example:
+
+```go
+import qtesting "github.com/qpubio/qpub-go/testing"
+
+mock := qtesting.NewMockWS()
+// inject mock via channel.NewSocketManager(mock, log)
+```
+
+Run the full suite before PRs: `go test -race ./...`.
+
 ## Contributing workflow
 
 1. Branch from `main` or `dev` (match the branch your PR targets): `feature/…` or `fix/…`.

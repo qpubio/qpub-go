@@ -141,7 +141,10 @@ func (c *Conn) handleMessage(data []byte) {
 		Action protocol.ActionType `json:"action"`
 	}
 	if err := json.Unmarshal(data, &peek); err != nil {
-		c.events.Emit(events.ConnectionFailed, events.ConnectionFailedPayload{Error: err})
+		c.events.Emit(events.ConnectionFailed, events.ConnectionFailedPayload{
+			Error:   err,
+			Context: "message_processing",
+		})
 		return
 	}
 	switch peek.Action {

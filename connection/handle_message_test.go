@@ -13,7 +13,8 @@ import (
 
 type dispatchWS struct{}
 
-func (dispatchWS) Send([]byte) error { return nil }
+func (dispatchWS) Send([]byte) error        { return nil }
+func (dispatchWS) IsConnected() bool        { return true }
 
 func TestHandleMessageRoutesDataMessageWithStringID(t *testing.T) {
 	chMgr := channel.NewSocketManager(dispatchWS{}, logger.NewFactory("t", option.DefaultOption()).Create("Conn"))

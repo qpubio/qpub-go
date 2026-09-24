@@ -40,6 +40,7 @@ type Connection interface {
 	Connect(ctx context.Context) error
 	Disconnect()
 	IsConnected() bool
+	WaitUntilConnected(ctx context.Context) error
 	Ping(ctx context.Context) (time.Duration, error)
 	Reset()
 	IsResetting() bool
@@ -58,7 +59,8 @@ type SocketChannel interface {
 	Name() string
 	Publish(ctx context.Context, data interface{}, opts channel.PublishOptions) error
 	Subscribe(ctx context.Context, handler channel.MessageHandler, opts channel.SubscribeOptions) error
-	Unsubscribe(ctx context.Context) error
+	Unsubscribe(ctx context.Context, opts ...channel.UnsubscribeOptions) error
+	On(event string, fn func(any))
 	Pause(bufferMessages bool)
 	Resume()
 	IsPaused() bool
