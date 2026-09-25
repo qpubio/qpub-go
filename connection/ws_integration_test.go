@@ -27,7 +27,7 @@ func TestWebSocketReadLoopDispatchesChannelMessage(t *testing.T) {
 		if err != nil {
 			return
 		}
-		defer c.Close()
+		defer func() { _ = c.Close() }()
 
 		connected, _ := json.Marshal(map[string]interface{}{
 			"action": protocol.ActionConnected, "connection_id": "c1",

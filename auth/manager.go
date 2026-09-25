@@ -74,9 +74,6 @@ func (m *Manager) Authenticate(ctx context.Context) (*option.AuthResponse, error
 
 	o := m.opts.Get()
 	retries := o.AuthenticateRetries
-	if retries == 0 && o.AuthenticateRetryIntervalMs == 1000 && !o.Debug {
-		// keep zero retries when explicitly 0 in tests
-	}
 	retryInterval := time.Duration(o.AuthenticateRetryIntervalMs) * time.Millisecond
 
 	for attempt := 0; attempt <= retries; attempt++ {

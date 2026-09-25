@@ -47,7 +47,6 @@ type WireMessage struct {
 	ID             string               `json:"id,omitempty"`
 	Timestamp      string               `json:"timestamp,omitempty"`
 	Messages       []DataMessagePayload `json:"messages,omitempty"`
-	PingID         int                  `json:"id,omitempty"` // ping/pong correlation (same JSON key as message id)
 }
 
 // RestPublishRequest is REST batch/single publish body.

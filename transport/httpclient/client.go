@@ -39,8 +39,7 @@ func (c *Client) Get(ctx context.Context, url string, headers map[string]string)
 	if err != nil {
 		return nil, 0, err
 	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+	body, err := readAndClose(resp)
 	if err != nil {
 		return nil, resp.StatusCode, err
 	}
@@ -85,8 +84,7 @@ func (c *Client) doJSON(ctx context.Context, method, url string, body interface{
 	if err != nil {
 		return nil, 0, err
 	}
-	defer resp.Body.Close()
-	respBody, err := io.ReadAll(resp.Body)
+	respBody, err := readAndClose(resp)
 	if err != nil {
 		return nil, resp.StatusCode, err
 	}
@@ -94,6 +92,15 @@ func (c *Client) doJSON(ctx context.Context, method, url string, body interface{
 		return respBody, resp.StatusCode, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(respBody))
 	}
 	return respBody, resp.StatusCode, nil
+}
+
+func readAndClose(resp *http.Response) ([]byte, error) {
+	body, err := io.ReadAll(resp.Body)
+	closeErr := resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	return body, closeErr
 }
 
 // DecodeJSON unmarshals response bytes.
