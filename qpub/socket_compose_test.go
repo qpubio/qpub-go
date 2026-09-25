@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -25,7 +24,7 @@ func TestSocketComposeSubscribeReceivesMessage(t *testing.T) {
 		if err != nil {
 			return
 		}
-		defer c.Close()
+		defer func() { _ = c.Close() }()
 
 		connected, _ := json.Marshal(map[string]interface{}{
 			"action": protocol.ActionConnected, "connection_id": "c1",
@@ -84,16 +83,11 @@ func TestSocketComposeSubscribeReceivesMessage(t *testing.T) {
 
 	ch := socket.Channels.Get("news")
 	got := make(chan string, 1)
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := ch.Subscribe(ctx, func(m qpub.Message) {
-			got <- string(m.Data)
-		}, channel.SubscribeOptions{Timeout: 2 * time.Second}); err != nil {
-			t.Error(err)
-		}
-	}()
+	if err := ch.Subscribe(ctx, func(m qpub.Message) {
+		got <- string(m.Data)
+	}, channel.SubscribeOptions{Timeout: 2 * time.Second}); err != nil {
+		t.Fatal(err)
+	}
 
 	select {
 	case s := <-got:
@@ -103,5 +97,4 @@ func TestSocketComposeSubscribeReceivesMessage(t *testing.T) {
 	case <-ctx.Done():
 		t.Fatal("timeout waiting for message")
 	}
-	wg.Wait()
 }
