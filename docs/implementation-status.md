@@ -179,6 +179,7 @@ Contributor guide: [CONTRIBUTING.md](../CONTRIBUTING.md).
 | CI: golangci-lint                                       | Done  | [.golangci.yml](../.golangci.yml)                                      |
 | Contributor develop/test/debug guide                    | Done  | [CONTRIBUTING.md](../CONTRIBUTING.md)                                  |
 | Release workflow / semver tags                          | Done  | [.github/workflows/release.yml](../.github/workflows/release.yml)      |
+| CHANGELOG.md                                            | Done  | [CHANGELOG.md](../CHANGELOG.md) — first release **v0.1.0** (2026-09-25) |
 | qpub.io / shared docs (Go examples on existing pages)   | Todo  | Deferred — add Go tabs on ExampleScope pages in `docs` repo when ready |
 
 ---

@@ -1,13 +1,15 @@
 # qpub-go architecture
 
-This SDK follows the same **architectural intent** as [qpub-js](https://github.com/qpubio/qpub-js): clear boundaries between protocol, ports, application logic, infrastructure, and the public facade. It is **not** backend-style DDD (no domain/application/infrastructure trees like qpub-backend). Structure is **Go-idiomatic**: packages by concern, `internal/` for non-public wiring, interfaces for testability, one composition root.
+The Go SDK uses clear boundaries between protocol, ports, application logic, infrastructure, and the public facade. It is **not** backend-style DDD (no domain/application/infrastructure trees like qpub-backend). Structure is **Go-idiomatic**: packages by concern, `internal/` for non-public wiring, interfaces for testability, one composition root.
+
+Cross-language API and parity tracking live in [implementation-status.md](./implementation-status.md) and [cross-sdk-api.md](./cross-sdk-api.md).
 
 ## Goals
 
 - **Isolate layers** so protocol and use cases do not depend on HTTP/WebSocket details.
 - **Scale** by adding features inside the right package without reshaping the module.
 - **Avoid circular imports** via dependency direction and small port interfaces.
-- **Match qpub-js mentally** (Socket/Rest, managers, auth, channels, queues) without copying JS patterns (DI container, EventEmitter, Promises).
+- **Expose Socket and Rest** with Go idioms (`context`, callbacks, functional options) rather than runtime DI or event emitters.
 
 ## Layer model
 
@@ -74,17 +76,6 @@ flowchart TB
 | **Testing (consumers)** | `testing/`                                                          | Mocks and test constructors; may import `qpub` and `option`.                                                                                                        |
 | **Examples**            | `examples/`                                                         | Sample programs; import `qpub` only.                                                                                                                                |
 
-## Comparison with qpub-js (spirit, not shape)
-
-| qpub-js                                              | qpub-go                                                                 |
-| ---------------------------------------------------- | ----------------------------------------------------------------------- |
-| `types/protocol`, `types/config`                     | `protocol/`, `option/`                                                  |
-| `types/services` (ports)                             | `qpub/interfaces.go` today; target: `internal/port/` as interfaces grow |
-| `core/managers`, `core/channels`, `core/connections` | `auth/`, `channel/`, `connection/`, `queue/`                            |
-| `core/transport`, `core/shared`                      | `transport/*`, `internal/*`                                             |
-| `core/bootstrap` (DI)                                | `qpub/socket.go`, `qpub/rest.go` (composition root)                     |
-| `qpub.ts` facade                                     | `qpub/` package                                                         |
-
 ## Import rules (dependency direction)
 
 Allowed imports flow **downward** only. If a change requires an upward import, introduce or extend a **port interface** in the kernel/application boundary instead.
@@ -135,17 +126,15 @@ Do not document or encourage importing `internal/*` or `transport/*` from applic
 
 ## Concurrency conventions
 
-- **Per-channel message handlers**: run serially for a given `SocketChannel` (same handler queue as qpub-js single-thread semantics) unless documented otherwise.
+- **Per-channel message handlers**: run serially for a given `SocketChannel` unless documented otherwise.
 - **Connection read loop**: one goroutine demuxes WebSocket frames; dispatches to channel manager.
-- **Lifecycle**: prefer `context.Context` for cancel; `Reset()` on Socket/Rest mirrors qpub-js teardown order: connection → channels → auth → options.
+- **Lifecycle**: prefer `context.Context` for cancel; `Reset()` on Socket/Rest order: connection → channels → auth → options.
 
 ## Current layout vs target (evolution)
 
-Today’s repo is **mostly aligned** with the layer names above but some **application packages still call infrastructure directly** (e.g. auth → concrete HTTP client). That is acceptable for MVP; refactors should move toward ports without changing the public API.
-
 | Concern   | Current                                     | Target (incremental)                                                                         |
 | --------- | ------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Ports     | [qpub/interfaces.go](../qpub/interfaces.go) | Add `internal/port/http.go`, `internal/port/websocket.go`; application depends on interfaces |
+| Ports     | [internal/port/http.go](../internal/port/http.go), [qpub/interfaces.go](../qpub/interfaces.go) | Optional `internal/port/websocket.go` if WS mocking grows |
 | Bootstrap | Inline in `qpub/*.go`                       | Optional `internal/bootstrap/socket.go`, `rest.go` if wiring grows                           |
 | Event bus | `internal/emitter`                          | Keep internal; expose typed callbacks on managers/connection                                 |
 | Logger    | `internal/logger`                           | Optional `port.Logger` for custom sinks                                                      |
@@ -165,4 +154,4 @@ No big-bang rename required: new code follows import rules; existing code is tig
 ## Related
 
 - [implementation-status.md](./implementation-status.md) — plan phases and completion state
-- [cross-sdk-api.md](./cross-sdk-api.md) — JS vs Go API
+- [cross-sdk-api.md](./cross-sdk-api.md) — JavaScript vs Go API

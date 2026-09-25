@@ -9,7 +9,7 @@ import (
 	"github.com/qpubio/qpub-go/protocol"
 )
 
-// Re-export core types for convenience (mirrors @qpub/sdk exports).
+// Re-export core types for convenience at the package entry point.
 
 type (
 	Option         = option.Option
@@ -31,7 +31,7 @@ var (
 	DefaultOption  = option.DefaultOption
 )
 
-// ConnectionEvents mirrors qpub-js event constants.
+// ConnectionEvents names for connection lifecycle callbacks.
 var ConnectionEvents = struct {
 	Initialized  string
 	Connecting   string
@@ -52,7 +52,7 @@ var ConnectionEvents = struct {
 	Failed:       events.ConnectionFailed,
 }
 
-// ChannelEvents mirrors qpub-js channel events.
+// ChannelEvents names for socket channel lifecycle callbacks.
 var ChannelEvents = struct {
 	Initialized   string
 	Subscribing   string
@@ -73,7 +73,7 @@ var ChannelEvents = struct {
 	Failed:        events.ChannelFailed,
 }
 
-// AuthEvents mirrors qpub-js auth events.
+// AuthEvents names for authentication callbacks.
 var AuthEvents = struct {
 	TokenUpdated string
 	TokenExpired string

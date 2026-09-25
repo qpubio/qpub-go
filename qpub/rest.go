@@ -10,7 +10,7 @@ import (
 	"github.com/qpubio/qpub-go/transport/httpclient"
 )
 
-// Rest is the REST client (qpub-js Rest).
+// Rest is the HTTP client for channels and queues.
 type Rest struct {
 	instanceID string
 
@@ -25,14 +25,15 @@ type Rest struct {
 // NewRest creates a REST client.
 func NewRest(funcs ...option.OptionFunc) *Rest {
 	om := option.NewManager(funcs...)
+	instanceID := "rest_" + uuid.NewString()
 	http := httpclient.New()
-	logFactory := logger.NewFactory("rest_"+uuid.NewString(), om.Get())
+	logFactory := logger.NewFactory(instanceID, om.Get())
 	log := logFactory.Create("REST")
 	authMgr := auth.NewManager(om, http, logFactory.Create("AuthManager"))
 	chMgr := channel.NewRestManager(http, authMgr, om, logFactory.Create("RestChannelManager"))
-	qMgr := queue.NewManager(http, authMgr, om, logFactory.Create("RestQueueManager"), uuid.NewString())
+	qMgr := queue.NewManager(http, authMgr, om, logFactory.Create("RestQueueManager"), instanceID)
 	return &Rest{
-		instanceID:    "rest_" + uuid.NewString(),
+		instanceID:    instanceID,
 		OptionManager: om,
 		Auth:          authMgr,
 		Channels:      chMgr,

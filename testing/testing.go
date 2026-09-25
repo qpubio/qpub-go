@@ -1,4 +1,4 @@
-// Package testing provides mocks and helpers for unit tests (qpub-js testing exports).
+// Package testing provides mocks and helpers for unit tests against the public API.
 package testing
 
 import (

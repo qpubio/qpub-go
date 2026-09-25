@@ -33,7 +33,7 @@ type AuthResponse struct {
 	TokenRequest *TokenRequest `json:"tokenRequest,omitempty"`
 }
 
-// Option is SDK configuration (mirrors qpub-js Option).
+// Option is SDK configuration.
 type Option struct {
 	APIKey     string
 	AuthURL    string
@@ -72,7 +72,7 @@ type Option struct {
 	LogLevel string
 }
 
-// DefaultOption returns qpub-js DEFAULT_OPTIONS equivalent.
+// DefaultOption returns production-oriented defaults for hosts, reconnect, and auth.
 func DefaultOption() Option {
 	return Option{
 		HTTPHost: "rest.qpub.io",

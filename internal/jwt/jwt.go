@@ -85,7 +85,7 @@ func IsExpired(token string) bool {
 	return d.Payload.Exp*1000 <= time.Now().UnixMilli()
 }
 
-// Sign creates HS256 JWT (qpub-js JWT.sign).
+// Sign creates an HS256 JWT for QPub token flows.
 func Sign(payload Payload, apiKeyPublicID, apiKeySecret string) (string, error) {
 	header := Header{Alg: "HS256", Typ: "JWT", AKI: apiKeyPublicID}
 	hb, err := json.Marshal(header)

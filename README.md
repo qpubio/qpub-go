@@ -2,7 +2,21 @@
 
 Official Go client for [QPub](https://qpub.io) real-time messaging (Channels and Queues).
 
-## Install
+**Stability:** v0.x — the public API may change before v1.0.0. Pin a release, for example:
+
+```bash
+go get github.com/qpubio/qpub-go@v0.1.0
+```
+
+Import path for application code:
+
+```bash
+go get github.com/qpubio/qpub-go/qpub@v0.1.0
+```
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
+## Install (latest pseudo-version)
 
 ```bash
 go get github.com/qpubio/qpub-go/qpub

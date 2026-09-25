@@ -3,7 +3,7 @@
 | Document                                               | Purpose                                                                       |
 | ------------------------------------------------------ | ----------------------------------------------------------------------------- |
 | [../CONTRIBUTING.md](../CONTRIBUTING.md)               | Develop, run examples, test, lint, debug, PR workflow                         |
-| [architecture.md](./architecture.md)                   | Layer model, import rules, package map (Go-idiomatic, qpub-js-aligned spirit) |
+| [architecture.md](./architecture.md)                   | Layer model, import rules, package map                                        |
 | [implementation-status.md](./implementation-status.md) | Parity plan phases 0–8: done, partial, and remaining work                     |
 | [cross-sdk-api.md](./cross-sdk-api.md)                 | JavaScript vs Go public API comparison                                        |
 

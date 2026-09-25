@@ -27,7 +27,7 @@ type HTTPDoer interface {
 	Post(ctx context.Context, url string, body interface{}, headers map[string]string) ([]byte, int, error)
 }
 
-// Manager handles authentication (qpub-js AuthManager).
+// Manager handles API key, token, and auth URL flows.
 type Manager struct {
 	opts   *option.Manager
 	http   HTTPDoer
@@ -407,7 +407,7 @@ func (m *Manager) Reset() {
 	m.events.RemoveAll()
 }
 
-// BuildCanonicalString matches qpub-js AuthManager.buildCanonicalString.
+// BuildCanonicalString builds the newline-delimited string signed for token requests.
 func BuildCanonicalString(aki string, timestamp int64, alias string, permission option.Permission) string {
 	lines := []string{
 		"aki=" + aki,

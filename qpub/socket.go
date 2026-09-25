@@ -13,7 +13,7 @@ import (
 	"github.com/qpubio/qpub-go/transport/ws"
 )
 
-// Socket is the WebSocket client (qpub-js Socket).
+// Socket is the WebSocket client for realtime pub/sub.
 type Socket struct {
 	instanceID string
 
@@ -53,7 +53,7 @@ func NewSocket(funcs ...option.OptionFunc) *Socket {
 // GetInstanceID returns instance identifier.
 func (s *Socket) GetInstanceID() string { return s.instanceID }
 
-// Reset resets the socket instance (qpub-js order).
+// Reset tears down connection, channels, auth, and options (connection → channels → auth → options).
 func (s *Socket) Reset() {
 	s.Connection.Reset()
 	s.Channels.Reset()

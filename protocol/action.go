@@ -1,6 +1,6 @@
 package protocol
 
-// ActionType matches the backend WebSocket protocol (qpub-js ActionType).
+// ActionType is the WebSocket action field in the QPub socket protocol.
 type ActionType int
 
 const (

@@ -74,7 +74,7 @@ func NewSocketChannel(name string, ws MessageSender, log *logger.Logger) *Socket
 
 func (c *SocketChannel) Name() string { return c.name }
 
-// On registers a channel lifecycle listener (qpub-js channel.on).
+// On registers a channel lifecycle listener.
 func (c *SocketChannel) On(event string, fn func(any)) {
 	c.events.On(event, fn)
 }

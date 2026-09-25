@@ -97,10 +97,10 @@ Use the [testing/](testing/) package when building tests around the public API:
 | --------------- | --------------------------------------------------------------------------------------------------- |
 | `MockHTTP`      | Implements [internal/port/http.go](internal/port/http.go) `HTTPClient`; records Get/Post/Put/Delete |
 | `NewTestRest`   | `Rest` with auth, channels, and queues wired to one shared `MockHTTP`                               |
-| `NewTestSocket` | `Socket` with `autoConnect: false` (same as qpub-js test defaults)                                  |
+| `NewTestSocket` | `Socket` with `autoConnect: false` for deterministic tests                                        |
 | `MockWS`        | Records outbound WebSocket frames (channel tests)                                                   |
 
-qpub-js `MockFactory` / `TestContainer` are intentionally not ported — Go composes clients in [qpub/](qpub/) instead of runtime DI. Toggle booleans in tests with `option.WithAutoConnect`, `WithIsSecure`, etc.; `OptionManager.Set` does not merge bool zero-values (see [option/option.go](option/option.go)).
+Go composes clients in [qpub/](qpub/) without a runtime DI container. For cross-SDK parity notes, see [docs/implementation-status.md](docs/implementation-status.md). Toggle booleans in tests with `option.WithAutoConnect`, `WithIsSecure`, etc.; `OptionManager.Set` does not merge bool zero-values (see [option/option.go](option/option.go)).
 
 ## Lint
 

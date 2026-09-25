@@ -2,7 +2,7 @@ package events
 
 import "time"
 
-// Connection event names (qpub-js ConnectionEvents).
+// Connection lifecycle event names.
 const (
 	ConnectionInitialized  = "initialized"
 	ConnectionConnecting   = "connecting"

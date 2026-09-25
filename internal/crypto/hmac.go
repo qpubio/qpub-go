@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 )
 
-// HMACSign returns standard base64 HMAC-SHA256 (matches qpub-js Crypto.hmacSign).
+// HMACSign returns standard base64 HMAC-SHA256.
 func HMACSign(data, key string) (string, error) {
 	mac := hmac.New(sha256.New, []byte(key))
 	_, err := mac.Write([]byte(data))

@@ -34,4 +34,4 @@ Import `github.com/qpubio/qpub-go/testing` for `MockHTTP`, `NewTestRest`, and `N
 
 ## Token authentication
 
-Same three server-side flows: `GenerateToken`, `IssueToken`, `CreateTokenRequest`, plus client `RequestToken`. Canonical signing matches qpub-js 2.0.9+.
+Same three server-side flows: `GenerateToken`, `IssueToken`, `CreateTokenRequest`, plus client `RequestToken`. Canonical token-request signing follows the shared cross-SDK contract (see [implementation-status.md](./implementation-status.md)).
