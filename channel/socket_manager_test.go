@@ -1,6 +1,7 @@
 package channel_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -36,7 +37,7 @@ func TestSocketManagerReleaseKeepsChannelWithCallback(t *testing.T) {
 		time.Sleep(5 * time.Millisecond)
 		ch.HandleIncoming(subscribedAck("room"))
 	}()
-	if err := ch.Subscribe(t.Context(), func(m protocol.Message) {}, channel.SubscribeOptions{Timeout: time.Second}); err != nil {
+	if err := ch.Subscribe(context.Background(), func(m protocol.Message) {}, channel.SubscribeOptions{Timeout: time.Second}); err != nil {
 		t.Fatal(err)
 	}
 	mgr.Release("room")

@@ -1,6 +1,7 @@
 package connection
 
 import (
+	"context"
 	"encoding/json"
 	"sync"
 	"testing"
@@ -23,7 +24,7 @@ func TestHandleMessageRoutesDataMessageWithStringID(t *testing.T) {
 	ch := chMgr.Get("my-channel")
 	var wg sync.WaitGroup
 	wg.Add(1)
-	_ = ch.Subscribe(t.Context(), func(m protocol.Message) {
+	_ = ch.Subscribe(context.Background(), func(m protocol.Message) {
 		wg.Done()
 	}, channel.SubscribeOptions{})
 
