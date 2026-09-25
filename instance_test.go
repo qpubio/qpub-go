@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/qpubio/qpub-go/option"
-	"github.com/qpubio/qpub-go/qpub"
+	"github.com/qpubio/qpub-go"
 )
 
 func TestSocketInstanceIDStableAcrossServices(t *testing.T) {

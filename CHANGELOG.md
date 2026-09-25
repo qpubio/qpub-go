@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-25
+
+### Changed
+
+- Import the client as `github.com/qpubio/qpub-go` (facade at module root; no `/qpub` suffix).
+
 ## [0.1.0] - 2026-09-25
 
 ### Added
@@ -26,4 +32,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cross-SDK parity details: [docs/implementation-status.md](docs/implementation-status.md)
 - Server-side / backend use; no browser bundle or React helpers
 
+[0.2.0]: https://github.com/qpubio/qpub-go/releases/tag/v0.2.0
 [0.1.0]: https://github.com/qpubio/qpub-go/releases/tag/v0.1.0

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/qpubio/qpub-go/channel"
-	"github.com/qpubio/qpub-go/qpub"
+	"github.com/qpubio/qpub-go"
 )
 
 func main() {

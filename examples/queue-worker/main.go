@@ -9,7 +9,7 @@ import (
 	"os/signal"
 
 	"github.com/qpubio/qpub-go/protocol"
-	"github.com/qpubio/qpub-go/qpub"
+	"github.com/qpubio/qpub-go"
 )
 
 func main() {

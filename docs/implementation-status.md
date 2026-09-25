@@ -48,8 +48,8 @@ Contributor guide: [CONTRIBUTING.md](../CONTRIBUTING.md).
 | `__tests__/unit/option-manager.test.ts`                 | [option/option_test.go](../option/option_test.go)                                                                                                                                                                                                                            |
 | `__tests__/unit/socket-channel.test.ts`                 | [channel/socket_test.go](../channel/socket_test.go), [channel/socket_multi_event_test.go](../channel/socket_multi_event_test.go)                                                                                                                                             |
 | `__tests__/unit/socket-channel-manager.test.ts`         | [channel/socket_manager_test.go](../channel/socket_manager_test.go)                                                                                                                                                                                                          |
-| `__tests__/integration/auth-connection-channel.test.ts` | [qpub/socket_compose_test.go](../qpub/socket_compose_test.go), [connection/ws_integration_test.go](../connection/ws_integration_test.go)                                                                                                                                     |
-| `__tests__/integration/instance-id.test.ts`             | [qpub/instance_test.go](../qpub/instance_test.go)                                                                                                                                                                                                                            |
+| `__tests__/integration/auth-connection-channel.test.ts` | [socket_compose_test.go](../socket_compose_test.go), [connection/ws_integration_test.go](../connection/ws_integration_test.go)                                                                                                                                     |
+| `__tests__/integration/instance-id.test.ts`             | [instance_test.go](../instance_test.go)                                                                                                                                                                                                                            |
 
 ---
 
@@ -76,7 +76,7 @@ Contributor guide: [CONTRIBUTING.md](../CONTRIBUTING.md).
 | REST base URL builder                                     | Done  | `option.BuildRestBaseURL`               |
 | AuthManager: Authenticate, tokens, headers, query URL     | Done  | [auth/manager.go](../auth/manager.go)   |
 | Auth events (token updated/expired/error)                 | Done  | [events/events.go](../events/events.go) |
-| `NewRest`, Reset, GetInstanceID                           | Done  | [qpub/rest.go](../qpub/rest.go)         |
+| `NewRest`, Reset, GetInstanceID                           | Done  | [rest.go](../rest.go)         |
 
 ---
 
@@ -110,7 +110,7 @@ Contributor guide: [CONTRIBUTING.md](../CONTRIBUTING.md).
 | WebSocket client wrapper            | Done  | [transport/ws/client.go](../transport/ws/client.go)                            |
 | Connect with auth URL               | Done  | [connection/connection.go](../connection/connection.go)                        |
 | Connection lifecycle events         | Done  |                                                                                |
-| Auto-connect                        | Done  | [qpub/socket.go](../qpub/socket.go)                                            |
+| Auto-connect                        | Done  | [socket.go](../socket.go)                                            |
 | Auto-reconnect + backoff            | Done  | [connection/reconnect_test.go](../connection/reconnect_test.go)                |
 | Auto-authenticate on connect        | Done  |                                                                                |
 | Ping/pong RTT (`id` correlation)    | Done  | [connection/ping_test.go](../connection/ping_test.go)                          |
@@ -118,7 +118,7 @@ Contributor guide: [CONTRIBUTING.md](../CONTRIBUTING.md).
 | MESSAGE routing (string message id) | Done  | Peek `action` before unmarshaling ping `id` as int                             |
 | Malformed JSON → failed + context   | Done  | `message_processing` context on [events.ConnectionFailed](../events/events.go) |
 | Connection unit/integration tests   | Done  | [connection/ws_integration_test.go](../connection/ws_integration_test.go)      |
-| `WaitUntilConnected`                | Done  | On `*Conn` and [Connection interface](../qpub/interfaces.go)                   |
+| `WaitUntilConnected`                | Done  | On `*Conn` and [Connection interface](../interfaces.go)                   |
 
 ---
 
@@ -146,7 +146,7 @@ Contributor guide: [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 | Item                                                 | State | Notes                                                              |
 | ---------------------------------------------------- | ----- | ------------------------------------------------------------------ |
-| `NewSocket`, GetInstanceID                           | Done  | [qpub/socket.go](../qpub/socket.go)                                |
+| `NewSocket`, GetInstanceID                           | Done  | [socket.go](../socket.go)                                |
 | Reset order (connection → channels → auth → options) | Done  |                                                                    |
 | Thread-safety documentation                          | Done  | [architecture.md](./architecture.md) + serial handlers per channel |
 
@@ -156,11 +156,11 @@ Contributor guide: [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 | Item                                            | State | Notes                                                                                                  |
 | ----------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------ |
-| Exported consumer interfaces                    | Done  | [qpub/interfaces.go](../qpub/interfaces.go)                                                            |
-| Event constants re-export                       | Done  | [qpub/doc.go](../qpub/doc.go)                                                                          |
+| Exported consumer interfaces                    | Done  | [interfaces.go](../interfaces.go)                                                            |
+| Event constants re-export                       | Done  | [doc.go](../doc.go)                                                                          |
 | `testing/` mocks and helpers                    | Done  | MockHTTP, MockWS, NewTestRest, NewTestSocket — [testing/](../testing/)                                 |
 | Parity with qpub-js TestContainer / MockFactory | Done  | `MockHTTP` (`port.HTTPClient`), `MockWS`, `NewTestRest` / `NewTestSocket`; no DI container (by design) |
-| Runtime DI container                            | N/A   | By design: composition in `qpub/` per [architecture.md](./architecture.md)                             |
+| Runtime DI container                            | N/A   | By design: composition at module root per [architecture.md](./architecture.md)                          |
 
 ---
 

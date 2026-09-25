@@ -5,13 +5,7 @@ Official Go client for [QPub](https://qpub.io) real-time messaging (Channels and
 **Stability:** v0.x — the public API may change before v1.0.0. Pin a release, for example:
 
 ```bash
-go get github.com/qpubio/qpub-go@v0.1.0
-```
-
-Import path for application code:
-
-```bash
-go get github.com/qpubio/qpub-go/qpub@v0.1.0
+go get github.com/qpubio/qpub-go@v0.2.0
 ```
 
 See [CHANGELOG.md](CHANGELOG.md) for release notes.
@@ -19,7 +13,7 @@ See [CHANGELOG.md](CHANGELOG.md) for release notes.
 ## Install (latest pseudo-version)
 
 ```bash
-go get github.com/qpubio/qpub-go/qpub
+go get github.com/qpubio/qpub-go
 ```
 
 ## Quick start
@@ -34,8 +28,8 @@ import (
     "fmt"
     "log"
 
+    "github.com/qpubio/qpub-go"
     "github.com/qpubio/qpub-go/channel"
-    "github.com/qpubio/qpub-go/qpub"
 )
 
 func main() {
@@ -59,8 +53,8 @@ func main() {
 ```go
 import (
     "context"
+    "github.com/qpubio/qpub-go"
     "github.com/qpubio/qpub-go/channel"
-    "github.com/qpubio/qpub-go/qpub"
 )
 
 rest := qpub.NewRest(qpub.WithAPIKey("YOUR_PUBLIC_ID:YOUR_SECRET"))

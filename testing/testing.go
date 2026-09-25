@@ -10,7 +10,7 @@ import (
 	"github.com/qpubio/qpub-go/internal/logger"
 	"github.com/qpubio/qpub-go/internal/port"
 	"github.com/qpubio/qpub-go/option"
-	"github.com/qpubio/qpub-go/qpub"
+	"github.com/qpubio/qpub-go"
 	"github.com/qpubio/qpub-go/queue"
 	"github.com/qpubio/qpub-go/transport/httpclient"
 )

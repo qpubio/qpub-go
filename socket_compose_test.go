@@ -13,7 +13,7 @@ import (
 	"github.com/qpubio/qpub-go/channel"
 	"github.com/qpubio/qpub-go/option"
 	"github.com/qpubio/qpub-go/protocol"
-	"github.com/qpubio/qpub-go/qpub"
+	"github.com/qpubio/qpub-go"
 )
 
 var composeUpgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
@@ -69,7 +69,11 @@ func TestSocketComposeSubscribeReceivesMessage(t *testing.T) {
 			o.AutoAuthenticate = false
 		},
 	)
-	defer socket.Reset()
+	defer func() {
+		socket.Connection.Disconnect()
+		time.Sleep(100 * time.Millisecond)
+		socket.Reset()
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

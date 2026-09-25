@@ -68,7 +68,7 @@ flowchart TB
 
 | Layer                   | Packages                                                            | Responsibility                                                                                                                                                      |
 | ----------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **API**                 | `qpub/`                                                             | Only stable entry points: `NewSocket`, `NewRest`, re-exported types, event name constants, consumer-facing interfaces. Wires dependencies (composition root).       |
+| **API**                 | module root (`package qpub`)                                        | Only stable entry points: `NewSocket`, `NewRest`, re-exported types, event name constants, consumer-facing interfaces. Wires dependencies (composition root).       |
 | **Application**         | `auth/`, `connection/`, `channel/`, `queue/`                        | Use cases: authenticate, connect/reconnect, subscribe/publish, enqueue/worker loop. Depends on **ports** (HTTP, WS, options, logger) and **kernel**, not on `qpub`. |
 | **Shared kernel**       | `protocol/`, `option/`, `events/`                                   | Wire DTOs, config defaults, event names/payload shapes. No I/O, no managers.                                                                                        |
 | **Infrastructure**      | `transport/*`, `internal/jwt`, `internal/crypto`, `internal/apikey` | Real HTTP/WebSocket, crypto, JWT. Implements behavior behind small interfaces where possible.                                                                       |
@@ -103,8 +103,8 @@ Allowed imports flow **downward** only. If a change requires an upward import, i
 
 All runtime wiring for `Socket` and `Rest` lives in:
 
-- [qpub/socket.go](../qpub/socket.go)
-- [qpub/rest.go](../qpub/rest.go)
+- [socket.go](../socket.go)
+- [rest.go](../rest.go)
 
 New dependencies (custom HTTP client, logger, clock) should be added here (or in a future `internal/bootstrap/` package called only from `qpub`), not scattered across application packages.
 
@@ -113,7 +113,7 @@ New dependencies (custom HTTP client, logger, clock) should be added here (or in
 Consumers should depend on:
 
 ```go
-import "github.com/qpubio/qpub-go/qpub"
+import "github.com/qpubio/qpub-go"
 ```
 
 Advanced testing:
@@ -134,8 +134,8 @@ Do not document or encourage importing `internal/*` or `transport/*` from applic
 
 | Concern   | Current                                     | Target (incremental)                                                                         |
 | --------- | ------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Ports     | [internal/port/http.go](../internal/port/http.go), [qpub/interfaces.go](../qpub/interfaces.go) | Optional `internal/port/websocket.go` if WS mocking grows |
-| Bootstrap | Inline in `qpub/*.go`                       | Optional `internal/bootstrap/socket.go`, `rest.go` if wiring grows                           |
+| Ports     | [internal/port/http.go](../internal/port/http.go), [interfaces.go](../interfaces.go) | Optional `internal/port/websocket.go` if WS mocking grows |
+| Bootstrap | Inline in root `*.go` (`package qpub`)      | Optional `internal/bootstrap/socket.go`, `rest.go` if wiring grows                           |
 | Event bus | `internal/emitter`                          | Keep internal; expose typed callbacks on managers/connection                                 |
 | Logger    | `internal/logger`                           | Optional `port.Logger` for custom sinks                                                      |
 
@@ -147,8 +147,8 @@ No big-bang rename required: new code follows import rules; existing code is tig
 2. Config → `option/` (+ defaults documented in code).
 3. Use case → appropriate application package (`auth`, `channel`, `connection`, `queue`).
 4. I/O → `transport/` or `internal/`.
-5. Export types/constants → `qpub/doc.go` or `qpub/interfaces.go`.
-6. Wire in `qpub/NewSocket` or `NewRest`.
+5. Export types/constants → `doc.go` or `interfaces.go` at module root.
+6. Wire in `NewSocket` or `NewRest`.
 7. Update [implementation-status.md](./implementation-status.md) when parity phase completes.
 
 ## Related

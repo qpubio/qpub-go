@@ -41,7 +41,7 @@ Use functional options when constructing clients:
 ```go
 import (
     "github.com/qpubio/qpub-go/option"
-    "github.com/qpubio/qpub-go/qpub"
+    "github.com/qpubio/qpub-go"
 )
 
 rest := qpub.NewRest(
@@ -100,7 +100,7 @@ Use the [testing/](testing/) package when building tests around the public API:
 | `NewTestSocket` | `Socket` with `autoConnect: false` for deterministic tests                                        |
 | `MockWS`        | Records outbound WebSocket frames (channel tests)                                                   |
 
-Go composes clients in [qpub/](qpub/) without a runtime DI container. For cross-SDK parity notes, see [docs/implementation-status.md](docs/implementation-status.md). Toggle booleans in tests with `option.WithAutoConnect`, `WithIsSecure`, etc.; `OptionManager.Set` does not merge bool zero-values (see [option/option.go](option/option.go)).
+Go composes clients at the module root (`package qpub`) without a runtime DI container. For cross-SDK parity notes, see [docs/implementation-status.md](docs/implementation-status.md). Toggle booleans in tests with `option.WithAutoConnect`, `WithIsSecure`, etc.; `OptionManager.Set` does not merge bool zero-values (see [option/option.go](option/option.go)).
 
 ## Lint
 

@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/qpubio/qpub-go/option"
-	"github.com/qpubio/qpub-go/qpub"
+	"github.com/qpubio/qpub-go"
 )
 
 func main() {
