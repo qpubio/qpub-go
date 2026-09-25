@@ -166,21 +166,21 @@ Contributor guide: [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Phase 8 — Examples, CI, release, docs
 
-| Item                                                    | State | Notes                                                                  |
-| ------------------------------------------------------- | ----- | ---------------------------------------------------------------------- |
-| README quick start                                      | Done  | [README.md](../README.md)                                              |
-| cross-sdk-api.md                                        | Done  | [cross-sdk-api.md](./cross-sdk-api.md)                                 |
-| architecture.md                                         | Done  | [architecture.md](./architecture.md)                                   |
-| Example: basic REST publish                             | Done  | [examples/basic](../examples/basic/)                                   |
-| Example: socket pub/sub                                 | Done  | [examples/socket](../examples/socket/)                                 |
-| Example: token auth (CreateTokenRequest + RequestToken) | Done  | [examples/token-auth](../examples/token-auth/)                         |
-| Example: queue worker                                   | Done  | [examples/queue-worker](../examples/queue-worker/)                     |
-| CI: `go test -race ./...`                               | Done  | [.github/workflows/ci.yml](../.github/workflows/ci.yml)                |
-| CI: golangci-lint                                       | Done  | [.golangci.yml](../.golangci.yml)                                      |
-| Contributor develop/test/debug guide                    | Done  | [CONTRIBUTING.md](../CONTRIBUTING.md)                                  |
-| Release workflow / semver tags                          | Done  | [.github/workflows/release.yml](../.github/workflows/release.yml)      |
-| CHANGELOG.md                                            | Done  | [CHANGELOG.md](../CHANGELOG.md) — first release **v0.1.0** (2026-09-25) |
-| qpub.io / shared docs (Go examples on existing pages)   | Todo  | Deferred — add Go tabs on ExampleScope pages in `docs` repo when ready |
+| Item                                                    | State | Notes                                                                                                                                                                                   |
+| ------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| README quick start                                      | Done  | [README.md](../README.md)                                                                                                                                                               |
+| cross-sdk-api.md                                        | Done  | [cross-sdk-api.md](./cross-sdk-api.md)                                                                                                                                                  |
+| architecture.md                                         | Done  | [architecture.md](./architecture.md)                                                                                                                                                    |
+| Example: basic REST publish                             | Done  | [examples/basic](../examples/basic/)                                                                                                                                                    |
+| Example: socket pub/sub                                 | Done  | [examples/socket](../examples/socket/)                                                                                                                                                  |
+| Example: token auth (CreateTokenRequest + RequestToken) | Done  | [examples/token-auth](../examples/token-auth/)                                                                                                                                          |
+| Example: queue worker                                   | Done  | [examples/queue-worker](../examples/queue-worker/)                                                                                                                                      |
+| CI: `go test -race ./...`                               | Done  | [.github/workflows/ci.yml](../.github/workflows/ci.yml)                                                                                                                                 |
+| CI: golangci-lint                                       | Done  | [.golangci.yml](../.golangci.yml)                                                                                                                                                       |
+| Contributor develop/test/debug guide                    | Done  | [CONTRIBUTING.md](../CONTRIBUTING.md)                                                                                                                                                   |
+| Release workflow / semver tags                          | Done  | [.github/workflows/release.yml](../.github/workflows/release.yml)                                                                                                                       |
+| CHANGELOG.md                                            | Done  | [CHANGELOG.md](../CHANGELOG.md) — first release **v0.1.0** (2026-09-25)                                                                                                                 |
+| qpub.io / shared docs (Go examples on existing pages)   | Done  | `docs` repo: `getting-started/sdks.mdx`, `quickstart.mdx`, `core/pubsub/subscribe.mdx`, `publish.mdx`, `core/auth/token.mdx` — Language **Go** + ` ```go ` fences on ExampleScope pages |
 
 ---
 
