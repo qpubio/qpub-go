@@ -27,12 +27,12 @@ Track parity and roadmap items in [docs/implementation-status.md](docs/implement
 
 Examples live under [examples/](examples/). Use environment variables for credentials; never commit API keys.
 
-| Example | Command | Environment |
-|---------|---------|-------------|
-| REST publish | `go run ./examples/basic` | `QPUB_API_KEY=publicId:secret` |
-| Socket subscribe | `go run ./examples/socket` | `QPUB_API_KEY=publicId:secret` |
-| Token auth flow | `go run ./examples/token-auth` | `QPUB_API_KEY=publicId:secret` |
-| Queue worker | `go run ./examples/queue-worker` | `QPUB_API_KEY`, `QPUB_QUEUE` |
+| Example          | Command                          | Environment                    |
+| ---------------- | -------------------------------- | ------------------------------ |
+| REST publish     | `go run ./examples/basic`        | `QPUB_API_KEY=publicId:secret` |
+| Socket subscribe | `go run ./examples/socket`       | `QPUB_API_KEY=publicId:secret` |
+| Token auth flow  | `go run ./examples/token-auth`   | `QPUB_API_KEY=publicId:secret` |
+| Queue worker     | `go run ./examples/queue-worker` | `QPUB_API_KEY`, `QPUB_QUEUE`   |
 
 ### Custom endpoints or options
 
@@ -91,7 +91,16 @@ go test ./queue/... -v
 
 Canonical signing golden tests read fixtures from [auth/testdata/](auth/testdata/).
 
-Use the [testing/](testing/) package helpers (`MockHTTP`, `NewTestRest`, `NewTestSocket`) when building tests around the public API.
+Use the [testing/](testing/) package when building tests around the public API:
+
+| Helper          | Role                                                                                                |
+| --------------- | --------------------------------------------------------------------------------------------------- |
+| `MockHTTP`      | Implements [internal/port/http.go](internal/port/http.go) `HTTPClient`; records Get/Post/Put/Delete |
+| `NewTestRest`   | `Rest` with auth, channels, and queues wired to one shared `MockHTTP`                               |
+| `NewTestSocket` | `Socket` with `autoConnect: false` (same as qpub-js test defaults)                                  |
+| `MockWS`        | Records outbound WebSocket frames (channel tests)                                                   |
+
+qpub-js `MockFactory` / `TestContainer` are intentionally not ported — Go composes clients in [qpub/](qpub/) instead of runtime DI. Toggle booleans in tests with `option.WithAutoConnect`, `WithIsSecure`, etc.; `OptionManager.Set` does not merge bool zero-values (see [option/option.go](option/option.go)).
 
 ## Lint
 

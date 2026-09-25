@@ -7,9 +7,9 @@ import (
 	"github.com/qpubio/qpub-go/auth"
 	"github.com/qpubio/qpub-go/internal/emitter"
 	"github.com/qpubio/qpub-go/internal/logger"
+	"github.com/qpubio/qpub-go/internal/port"
 	"github.com/qpubio/qpub-go/option"
 	"github.com/qpubio/qpub-go/protocol"
-	"github.com/qpubio/qpub-go/transport/httpclient"
 )
 
 // PublishOptions for channel publish.
@@ -21,14 +21,14 @@ type PublishOptions struct {
 // RestChannel publishes via HTTP.
 type RestChannel struct {
 	name   string
-	http   *httpclient.Client
+	http   port.HTTPClient
 	auth   *auth.Manager
 	opts   *option.Manager
 	log    *logger.Logger
 	events *emitter.Emitter[any]
 }
 
-func NewRestChannel(name string, http *httpclient.Client, auth *auth.Manager, opts *option.Manager, log *logger.Logger) *RestChannel {
+func NewRestChannel(name string, http port.HTTPClient, auth *auth.Manager, opts *option.Manager, log *logger.Logger) *RestChannel {
 	return &RestChannel{name: name, http: http, auth: auth, opts: opts, log: log, events: emitter.New[any]()}
 }
 
@@ -62,13 +62,13 @@ func (c *RestChannel) Reset() {
 // RestManager manages REST channels.
 type RestManager struct {
 	channels map[string]*RestChannel
-	http     *httpclient.Client
+	http     port.HTTPClient
 	auth     *auth.Manager
 	opts     *option.Manager
 	log      *logger.Logger
 }
 
-func NewRestManager(http *httpclient.Client, auth *auth.Manager, opts *option.Manager, log *logger.Logger) *RestManager {
+func NewRestManager(http port.HTTPClient, auth *auth.Manager, opts *option.Manager, log *logger.Logger) *RestManager {
 	return &RestManager{
 		channels: make(map[string]*RestChannel),
 		http:     http,

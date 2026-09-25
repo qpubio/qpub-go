@@ -89,17 +89,17 @@ flowchart TB
 
 Allowed imports flow **downward** only. If a change requires an upward import, introduce or extend a **port interface** in the kernel/application boundary instead.
 
-| From                           | May import                                                                           | Must not import                                                                 |
-| ------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| `protocol`, `option`, `events` | std library only                                                                     | `auth`, `channel`, `connection`, `queue`, `transport`, `qpub`, `testing`        |
-| `internal/*`                   | std, `option` (logger only if needed)                                                | `qpub`, `auth`, `channel`, `connection`, `queue`                                |
-| `transport/*`                  | std, `internal/logger` (optional)                                                    | `qpub`, `auth`, `channel`, `connection`, `queue`                                |
-| `auth`, `queue`                | `option`, `protocol`, `events`, `internal/*`, `transport/httpclient` (via interface) | `qpub`, `connection`, `channel`                                                 |
-| `connection`                   | `option`, `protocol`, `events`, `auth`, `channel`, `transport/ws`, `internal/*`      | `qpub`, `queue`                                                                 |
-| `channel`                      | `option`, `protocol`, `events`, `auth`, `transport/*`, `internal/*`                  | `qpub`, `connection` (avoid: connection orchestrates channels, not the reverse) |
-| `qpub`                         | all application + kernel + transport packages used for wiring                        | `testing`                                                                       |
-| `testing`                      | `qpub`, `option`, `auth`, … for mocks                                                | —                                                                               |
-| `examples/*`                   | `qpub`, `channel` (subscribe options), std                                           | `internal/*`, `transport/*` directly                                            |
+| From                              | May import                                                                      | Must not import                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `protocol`, `option`, `events`    | std library only                                                                | `auth`, `channel`, `connection`, `queue`, `transport`, `qpub`, `testing`        |
+| `internal/*`                      | std, `option` (logger only if needed)                                           | `qpub`, `auth`, `channel`, `connection`, `queue`                                |
+| `transport/*`                     | std, `internal/logger` (optional)                                               | `qpub`, `auth`, `channel`, `connection`, `queue`                                |
+| `auth`, `queue`, `channel` (REST) | `option`, `protocol`, `events`, `internal/*`, `internal/port` (HTTP)            | `qpub`, `connection` (REST managers only; socket channel uses `MessageSender`)  |
+| `connection`                      | `option`, `protocol`, `events`, `auth`, `channel`, `transport/ws`, `internal/*` | `qpub`, `queue`                                                                 |
+| `channel`                         | `option`, `protocol`, `events`, `auth`, `transport/*`, `internal/*`             | `qpub`, `connection` (avoid: connection orchestrates channels, not the reverse) |
+| `qpub`                            | all application + kernel + transport packages used for wiring                   | `testing`                                                                       |
+| `testing`                         | `qpub`, `option`, `auth`, … for mocks                                           | —                                                                               |
+| `examples/*`                      | `qpub`, `channel` (subscribe options), std                                      | `internal/*`, `transport/*` directly                                            |
 
 **Circular import avoidance in Go**
 

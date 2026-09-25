@@ -20,6 +20,10 @@ Wire protocol and REST paths are identical across SDKs. Client ergonomics follow
 | `channel.subscribe(fn, { event })` | `ch.Subscribe(ctx, fn, channel.SubscribeOptions{Event: "..."})` |
 | `rest.queues.enqueue(...)` | `rest.Queues.Enqueue(ctx, ...)` |
 
+## Testing (Go)
+
+Import `github.com/qpubio/qpub-go/testing` for `MockHTTP`, `NewTestRest`, and `NewTestSocket` (see [CONTRIBUTING.md](../CONTRIBUTING.md)).
+
 ## Go adaptations
 
 - **Async**: use `context.Context` and `(T, error)` instead of Promises.

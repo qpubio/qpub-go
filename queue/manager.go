@@ -10,9 +10,9 @@ import (
 
 	"github.com/qpubio/qpub-go/auth"
 	"github.com/qpubio/qpub-go/internal/logger"
+	"github.com/qpubio/qpub-go/internal/port"
 	"github.com/qpubio/qpub-go/option"
 	"github.com/qpubio/qpub-go/protocol"
-	"github.com/qpubio/qpub-go/transport/httpclient"
 )
 
 // JobHandler processes a pulled job.
@@ -20,7 +20,7 @@ type JobHandler func(ctx context.Context, job protocol.QueueJob) (interface{}, e
 
 // Manager is RestQueueManager equivalent.
 type Manager struct {
-	http       *httpclient.Client
+	http       port.HTTPClient
 	auth       *auth.Manager
 	opts       *option.Manager
 	log        *logger.Logger
@@ -30,7 +30,7 @@ type Manager struct {
 	stopCh     chan struct{}
 }
 
-func NewManager(http *httpclient.Client, auth *auth.Manager, opts *option.Manager, log *logger.Logger, instanceID string) *Manager {
+func NewManager(http port.HTTPClient, auth *auth.Manager, opts *option.Manager, log *logger.Logger, instanceID string) *Manager {
 	return &Manager{
 		http:     http,
 		auth:     auth,
