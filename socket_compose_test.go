@@ -102,3 +102,25 @@ func TestSocketComposeSubscribeReceivesMessage(t *testing.T) {
 		t.Fatal("timeout waiting for message")
 	}
 }
+
+func TestSocketComposeConnectAuthFailure(t *testing.T) {
+	authSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+	}))
+	defer authSrv.Close()
+
+	host := strings.TrimPrefix(authSrv.URL, "http://")
+	socket := qpub.NewSocket(
+		option.WithAutoConnect(false),
+		func(o *option.Option) {
+			o.AuthURL = "http://" + host + "/token"
+			o.AuthenticateRetries = 0
+		},
+	)
+	defer socket.Reset()
+
+	err := socket.Connection.Connect(context.Background())
+	if err == nil {
+		t.Fatal("expected auth failure")
+	}
+}

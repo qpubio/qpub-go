@@ -2,6 +2,7 @@ package connection
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/qpubio/qpub-go/auth"
@@ -24,6 +25,18 @@ func TestMalformedJSONEmitsFailedWithContext(t *testing.T) {
 	conn.handleMessage([]byte(`not-json`))
 	if ctx != "message_processing" {
 		t.Fatalf("context=%q", ctx)
+	}
+}
+
+func TestAutoReconnectDisabledDoesNotIncrementOnClose(t *testing.T) {
+	om := option.NewManager(func(o *option.Option) {
+		o.AutoReconnect = false
+	})
+	conn := newTestConn(t, om, &authHTTPMock{})
+	conn.reconnectAttempts = 0
+	conn.onClose(errors.New("closed"))
+	if conn.reconnectAttempts != 0 {
+		t.Fatalf("attempts=%d", conn.reconnectAttempts)
 	}
 }
 

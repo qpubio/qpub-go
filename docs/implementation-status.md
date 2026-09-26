@@ -8,7 +8,7 @@ Single source of truth for **parity with qpub-js v2.1.0** and the implementation
 
 ## Parity estimate (qpub-js v2.1.0 core)
 
-**Last reviewed:** 2026-09-25 (HTTP port wiring, testing helpers, parity tests)
+**Last reviewed:** 2026-09-26 (UUIDv7 instance IDs, qpub-js v2.1.0 test parity port)
 
 Excludes React, UMD, and runtime DI (out of scope). Percentages are approximate.
 
@@ -16,7 +16,7 @@ Excludes React, UMD, and runtime DI (out of scope). Percentages are approximate.
 | --------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------ |
 | Public API surface (Socket, Rest, auth, channels, queues) | ~92%    | Channel `On`, multi-event subscribe, `WaitUntilConnected` on connection interface                            |
 | Runtime behavior (reconnect, socket edge cases)           | ~85%    | Live smoke OK; reconnect/ping tests added; Node-only server ping watchdog N/A for gorilla client             |
-| Automated test parity                                     | ~75%    | option/instance/compose tests added; WS httptest; not every qpub-js test line ported                         |
+| Automated test parity                                     | ~95%    | Auth, connection, socket channel/manager, instance ID, integration, and `testing/` helper tests ported; Node ws ping watchdog N/A |
 | DevEx / shipping                                          | ~80%    | Release workflow, [CONTRIBUTING.md](../CONTRIBUTING.md), `testing/` MockWS; shared docs Go tabs not done yet |
 
 **Practical summary**
@@ -43,13 +43,15 @@ Contributor guide: [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 | qpub-js test file                                       | Go coverage                                                                                                                                                                                                                                                                  |
 | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `__tests__/unit/auth-manager.test.ts`                   | [auth/manager_test.go](../auth/manager_test.go), canonical vectors                                                                                                                                                                                                           |
-| `__tests__/unit/connection.test.ts`                     | [connection/handle_message_test.go](../connection/handle_message_test.go), [connection/reconnect_test.go](../connection/reconnect_test.go), [connection/ws_integration_test.go](../connection/ws_integration_test.go), [connection/ping_test.go](../connection/ping_test.go) |
+| `__tests__/unit/auth-manager.test.ts`                   | [auth/manager_test.go](../auth/manager_test.go), [auth/canonical_test.go](../auth/canonical_test.go)                                                                                                                                                                         |
+| `__tests__/unit/connection.test.ts`                     | [connection/connection_test.go](../connection/connection_test.go), [connection/handle_message_test.go](../connection/handle_message_test.go), [connection/reconnect_test.go](../connection/reconnect_test.go), [connection/ws_integration_test.go](../connection/ws_integration_test.go), [connection/ping_test.go](../connection/ping_test.go) (Node ping watchdog: skipped N/A) |
 | `__tests__/unit/option-manager.test.ts`                 | [option/option_test.go](../option/option_test.go)                                                                                                                                                                                                                            |
-| `__tests__/unit/socket-channel.test.ts`                 | [channel/socket_test.go](../channel/socket_test.go), [channel/socket_multi_event_test.go](../channel/socket_multi_event_test.go)                                                                                                                                             |
+| `__tests__/unit/socket-channel.test.ts`                 | [channel/socket_test.go](../channel/socket_test.go), [channel/socket_message_test.go](../channel/socket_message_test.go), [channel/socket_pause_test.go](../channel/socket_pause_test.go), [channel/socket_events_test.go](../channel/socket_events_test.go), [channel/socket_operation_queue_test.go](../channel/socket_operation_queue_test.go), [channel/socket_multi_event_test.go](../channel/socket_multi_event_test.go) |
 | `__tests__/unit/socket-channel-manager.test.ts`         | [channel/socket_manager_test.go](../channel/socket_manager_test.go)                                                                                                                                                                                                          |
-| `__tests__/integration/auth-connection-channel.test.ts` | [socket_compose_test.go](../socket_compose_test.go), [connection/ws_integration_test.go](../connection/ws_integration_test.go)                                                                                                                                     |
-| `__tests__/integration/instance-id.test.ts`             | [instance_test.go](../instance_test.go)                                                                                                                                                                                                                            |
+| `__tests__/unit/socket-rest-instance-id.test.ts`        | [instance_test.go](../instance_test.go) (UUIDv7 via [internal/instanceid](../internal/instanceid/))                                                                                                                                                                          |
+| `__tests__/integration/auth-connection-channel.test.ts` | [auth_integration_test.go](../auth_integration_test.go), [socket_compose_test.go](../socket_compose_test.go), [connection/ws_integration_test.go](../connection/ws_integration_test.go)                                                                                      |
+| `__tests__/integration/instance-id.test.ts`             | [instance_test.go](../instance_test.go)                                                                                                                                                                                                                                      |
+| `__tests__/testing-utilities.test.ts`                   | [testing/testing_test.go](../testing/testing_test.go) (no DI container — by design)                                                                                                                                                                                          |
 
 ---
 
@@ -76,7 +78,7 @@ Contributor guide: [CONTRIBUTING.md](../CONTRIBUTING.md).
 | REST base URL builder                                     | Done  | `option.BuildRestBaseURL`               |
 | AuthManager: Authenticate, tokens, headers, query URL     | Done  | [auth/manager.go](../auth/manager.go)   |
 | Auth events (token updated/expired/error)                 | Done  | [events/events.go](../events/events.go) |
-| `NewRest`, Reset, GetInstanceID                           | Done  | [rest.go](../rest.go)         |
+| `NewRest`, Reset, GetInstanceID (UUIDv7)                  | Done  | [rest.go](../rest.go), [internal/instanceid](../internal/instanceid/)                                                                                                                                      |
 
 ---
 
@@ -146,7 +148,7 @@ Contributor guide: [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 | Item                                                 | State | Notes                                                              |
 | ---------------------------------------------------- | ----- | ------------------------------------------------------------------ |
-| `NewSocket`, GetInstanceID                           | Done  | [socket.go](../socket.go)                                |
+| `NewSocket`, GetInstanceID (UUIDv7)                  | Done  | [socket.go](../socket.go), [internal/instanceid](../internal/instanceid/)                                                                                                                                  |
 | Reset order (connection → channels → auth → options) | Done  |                                                                    |
 | Thread-safety documentation                          | Done  | [architecture.md](./architecture.md) + serial handlers per channel |
 

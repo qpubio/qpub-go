@@ -91,6 +91,30 @@ func TestBuildRestBaseURL(t *testing.T) {
 	}
 }
 
+func TestSetEmptyOptionNoOp(t *testing.T) {
+	m := option.NewManager(option.WithAPIKey("keep"))
+	before := m.Get()
+	m.Set(option.Option{})
+	after := m.Get()
+	if after != before {
+		t.Fatalf("empty set changed options: before=%+v after=%+v", before, after)
+	}
+}
+
+func TestOptionFuncDoesNotMutateCallerStruct(t *testing.T) {
+	custom := option.DefaultOption()
+	custom.APIKey = "original"
+	m := option.NewManager(func(o *option.Option) {
+		o.APIKey = "applied"
+	})
+	if custom.APIKey != "original" {
+		t.Fatalf("caller struct mutated: %q", custom.APIKey)
+	}
+	if m.Get().APIKey != "applied" {
+		t.Fatal("manager should have applied key")
+	}
+}
+
 func TestGetReturnsCopy(t *testing.T) {
 	m := option.NewManager(option.WithAPIKey("a"))
 	a := m.Get()

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-09-26
+
+### Changed
+
+- Socket and REST client instance IDs use UUIDv7 (`internal/instanceid`), aligned with qpub-js.
+
+### Added
+
+- Broader unit and integration tests (auth, connection, socket channel/manager, instance ID, `testing/` helpers).
+
 ## [0.2.0] - 2026-09-25
 
 ### Changed
@@ -32,5 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cross-SDK parity details: [docs/implementation-status.md](docs/implementation-status.md)
 - Server-side / backend use; no browser bundle or React helpers
 
+[0.1.3]: https://github.com/qpubio/qpub-go/releases/tag/v0.1.3
 [0.2.0]: https://github.com/qpubio/qpub-go/releases/tag/v0.2.0
 [0.1.0]: https://github.com/qpubio/qpub-go/releases/tag/v0.1.0

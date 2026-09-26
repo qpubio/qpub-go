@@ -3,8 +3,8 @@ package qpub
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/qpubio/qpub-go/auth"
+	"github.com/qpubio/qpub-go/internal/instanceid"
 	"github.com/qpubio/qpub-go/channel"
 	"github.com/qpubio/qpub-go/connection"
 	"github.com/qpubio/qpub-go/internal/logger"
@@ -28,7 +28,7 @@ type Socket struct {
 // NewSocket creates a Socket client.
 func NewSocket(funcs ...option.OptionFunc) *Socket {
 	om := option.NewManager(funcs...)
-	instanceID := "socket_" + uuid.NewString()
+	instanceID := instanceid.MustNewSocket()
 	logFactory := logger.NewFactory(instanceID, om.Get())
 	http := httpclient.New()
 	authMgr := auth.NewManager(om, http, logFactory.Create("AuthManager"))

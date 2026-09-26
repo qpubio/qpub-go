@@ -1,8 +1,8 @@
 package qpub
 
 import (
-	"github.com/google/uuid"
 	"github.com/qpubio/qpub-go/auth"
+	"github.com/qpubio/qpub-go/internal/instanceid"
 	"github.com/qpubio/qpub-go/channel"
 	"github.com/qpubio/qpub-go/internal/logger"
 	"github.com/qpubio/qpub-go/option"
@@ -25,7 +25,7 @@ type Rest struct {
 // NewRest creates a REST client.
 func NewRest(funcs ...option.OptionFunc) *Rest {
 	om := option.NewManager(funcs...)
-	instanceID := "rest_" + uuid.NewString()
+	instanceID := instanceid.MustNewRest()
 	http := httpclient.New()
 	logFactory := logger.NewFactory(instanceID, om.Get())
 	log := logFactory.Create("REST")
