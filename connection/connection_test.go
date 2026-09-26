@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
+	"strconv"
 	"net/http/httptest"
 	"strings"
 	"sync/atomic"
@@ -40,7 +40,9 @@ func wsOptsFromServerURL(srvURL string, extra ...option.OptionFunc) *option.Mana
 	host := parts[0]
 	port := 80
 	if len(parts) == 2 {
-		fmt.Sscanf(parts[1], "%d", &port)
+		if p, err := strconv.Atoi(parts[1]); err == nil {
+			port = p
+		}
 	}
 	funcs := []option.OptionFunc{
 		option.WithAPIKey("k"),

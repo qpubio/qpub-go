@@ -127,18 +127,6 @@ func TestSocketEventFilter(t *testing.T) {
 	}
 }
 
-type errSender struct {
-	mockSender
-	err error
-}
-
-func (e *errSender) Send(data []byte) error {
-	if e.err != nil {
-		return e.err
-	}
-	return e.mockSender.Send(data)
-}
-
 func TestSocketPublishSuccess(t *testing.T) {
 	sender := &mockSender{}
 	ch := channel.NewSocketChannel("room", sender, logger.NewFactory("t", option.DefaultOption()).Create("Ch"))
